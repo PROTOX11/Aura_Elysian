@@ -27,7 +27,7 @@ export const ProductsPage: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/api/products');
+        const res = await axios.get('http://localhost:5000/api/products');
         setAllProducts(res.data.map((p: any) => ({ ...p, id: p._id })));
       } catch (error) {
         console.error("Error fetching products:", error);

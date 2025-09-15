@@ -43,13 +43,13 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const productsRes = await axios.get('http://localhost:4000/api/products?limit=4');
+        const productsRes = await axios.get('http://localhost:5000/api/products?limit=4');
         setFeaturedProducts(productsRes.data.map((p: any) => ({ ...p, id: p._id })));
 
-        const testimonialsRes = await axios.get('http://localhost:4000/api/testimonials');
+        const testimonialsRes = await axios.get('http://localhost:5000/api/testimonials');
         setTestimonials(testimonialsRes.data);
 
-        const collectionsRes = await axios.get('http://localhost:4000/api/featured-collections');
+        const collectionsRes = await axios.get('http://localhost:5000/api/featured-collections');
         setFeaturedCollections(collectionsRes.data);
       } catch (error) {
         console.error("Error fetching data:", error);
