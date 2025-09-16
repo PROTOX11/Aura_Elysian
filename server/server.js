@@ -52,16 +52,20 @@ const auraUserSchema = new mongoose.Schema({
 });
 const AuraUser = mongoose.model('AuraUser', auraUserSchema);
 
+import User from './models/User.js';
+import CustomOrder from './models/CustomOrder.js';
+
 // General User Schema
-const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    username: { type: String },
-    mobile: { type: String },
-    address: { type: String },
-});
-const User = mongoose.model('User', userSchema);
+// Remove duplicate userSchema and User model definition here to avoid OverwriteModelError
+// const userSchema = new mongoose.Schema({
+//     name: { type: String, required: true },
+//     email: { type: String, required: true, unique: true },
+//     password: { type: String, required: true },
+//     username: { type: String },
+//     mobile: { type: String },
+//     address: { type: String },
+// });
+// const User = mongoose.model('User', userSchema);
 
 const productSchema = new mongoose.Schema({
     name: String,
@@ -114,6 +118,7 @@ import { auth } from './middleware/auth.js';
 import userRoutes from './routes/user.js';
 
 // Routes
+app.use('/api', userRoutes);
 app.get('/api/products', async (req, res) => {
     const { limit } = req.query;
     let query = Product.find();
@@ -140,6 +145,29 @@ app.post('/api/products', auth, upload.single('image'), async (req, res) => {
         console.error('Error saving product:', error.stack || error);
         res.status(500).json({ message: 'Failed to save product' });
     }
+});
+
+// Custom Orders API
+app.post('/api/custom-orders', upload.single('image'), async (req, res) => {
+    try {
+        const customOrderData = {
+            userId: req.user ? req.user.id : null,
+            image: req.file ? `/uploads/${req.file.filename}` : '',
+            description: req.body.description || '',
+            referenceLink: req.body.referenceLink || '',
+        };
+        const customOrder = new CustomOrder(customOrderData);
+        const savedOrder = await customOrder.save();
+        res.status(201).json({ message: 'Custom order submitted successfully', id: savedOrder._id });
+    } catch (error) {
+        console.error('Error saving custom order:', error.stack || error);
+        res.status(500).json({ message: 'Failed to submit custom order' });
+    }
+});
+
+app.get('/api/testimonials', async (req, res) => {
+    const testimonials = await Testimonial.find();
+    res.json(testimonials);
 });
 
 app.get('/api/testimonials', async (req, res) => {

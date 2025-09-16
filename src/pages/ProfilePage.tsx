@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, LogOut, Mail, User as UserIcon, MapPin, Phone, Package } from 'lucide-react';
+import { User, LogOut, Mail, User as UserIcon, MapPin, Phone, Package, Edit } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -20,6 +20,10 @@ export const ProfilePage: React.FC = () => {
     address?: string;
   } | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [isEditingMobile, setIsEditingMobile] = useState(false);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [tempMobile, setTempMobile] = useState('');
+  const [tempAddress, setTempAddress] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,27 +33,28 @@ export const ProfilePage: React.FC = () => {
       return;
     }
 
-    // For now, decode token to get user info (assuming JWT payload has name and email)
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      setUser({
-        name: payload.name || 'User',
-        email: payload.email,
-        username: payload.username || payload.name?.toLowerCase().replace(' ', '_') || 'user',
-        mobile: payload.mobile || '+1 (555) 123-4567',
-        address: payload.address || '123 Main St, City, State 12345'
-      });
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      // Fallback: could fetch from API if needed
-      setUser({
-        name: 'User',
-        email: 'user@example.com',
-        username: 'user',
-        mobile: '+1 (555) 123-4567',
-        address: '123 Main St, City, State 12345'
-      });
-    }
+    // Fetch user profile from API
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        } else {
+          console.error('Failed to fetch user profile');
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        navigate('/login');
+      }
+    };
+
+    fetchUserProfile();
 
     // Mock orders data - in real app, fetch from API
     setOrders([
@@ -63,6 +68,72 @@ export const ProfilePage: React.FC = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('aura-token');
     navigate('/login');
+  };
+
+  const handleEditMobile = () => {
+    setTempMobile(user?.mobile || '');
+    setIsEditingMobile(true);
+  };
+
+  const handleSaveMobile = async () => {
+    const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
+    try {
+      const response = await fetch('http://localhost:5000/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ mobile: tempMobile }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setIsEditingMobile(false);
+      } else {
+        console.error('Failed to update mobile');
+      }
+    } catch (error) {
+      console.error('Error updating mobile:', error);
+    }
+  };
+
+  const handleCancelMobile = () => {
+    setIsEditingMobile(false);
+    setTempMobile('');
+  };
+
+  const handleEditAddress = () => {
+    setTempAddress(user?.address || '');
+    setIsEditingAddress(true);
+  };
+
+  const handleSaveAddress = async () => {
+    const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
+    try {
+      const response = await fetch('http://localhost:5000/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ address: tempAddress }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setIsEditingAddress(false);
+      } else {
+        console.error('Failed to update address');
+      }
+    } catch (error) {
+      console.error('Error updating address:', error);
+    }
+  };
+
+  const handleCancelAddress = () => {
+    setIsEditingAddress(false);
+    setTempAddress('');
   };
 
   if (!user) {
@@ -93,19 +164,12 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-              <User className="h-6 w-6 text-pink-500 mr-4" />
-              <div>
-                <p className="font-medium text-gray-900">{user.name}</p>
-                <p className="text-sm text-gray-500">Full Name</p>
-              </div>
-            </div>
 
             <div className="flex items-center p-4 bg-gray-50 rounded-lg">
               <UserIcon className="h-6 w-6 text-pink-500 mr-4" />
               <div>
-                <p className="font-medium text-gray-900">{user.username}</p>
-                <p className="text-sm text-gray-500">Username</p>
+                <p className="font-medium text-gray-900">{user.name}</p>
+                <p className="text-sm text-gray-500">Full Name</p>
               </div>
             </div>
 
@@ -119,17 +183,89 @@ export const ProfilePage: React.FC = () => {
 
             <div className="flex items-center p-4 bg-gray-50 rounded-lg">
               <Phone className="h-6 w-6 text-pink-500 mr-4" />
-              <div>
-                <p className="font-medium text-gray-900">{user.mobile}</p>
-                <p className="text-sm text-gray-500">Mobile Number</p>
+              <div className="flex-1">
+                {isEditingMobile ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={tempMobile}
+                      onChange={(e) => setTempMobile(e.target.value)}
+                      placeholder="Enter your phone number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveMobile}
+                        className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelMobile}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{user.mobile || 'Enter your phone number'}</p>
+                      <p className="text-sm text-gray-500">Mobile Number</p>
+                    </div>
+                    <button
+                      onClick={handleEditMobile}
+                      className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                    >
+                      <Edit className="h-4 w-4 text-gray-500" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="flex items-center p-4 bg-gray-50 rounded-lg">
               <MapPin className="h-6 w-6 text-pink-500 mr-4" />
-              <div>
-                <p className="font-medium text-gray-900">{user.address}</p>
-                <p className="text-sm text-gray-500">Address</p>
+              <div className="flex-1">
+                {isEditingAddress ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={tempAddress}
+                      onChange={(e) => setTempAddress(e.target.value)}
+                      placeholder="Enter your address"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveAddress}
+                        className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelAddress}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{user.address || 'Enter your address'}</p>
+                      <p className="text-sm text-gray-500">Address</p>
+                    </div>
+                    <button
+                      onClick={handleEditAddress}
+                      className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                    >
+                      <Edit className="h-4 w-4 text-gray-500" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
