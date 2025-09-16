@@ -4,9 +4,13 @@ import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { LoginPage } from './pages/Login';
+import { SignupPage } from './pages/SignupPage';
 import { TeamPage } from './pages/TeamPage';
 import TeamSignupPage from './pages/TeamSignupPage';
 import TeamLoginPage from './pages/TeamLoginPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { LikedProductsPage } from './pages/LikedProductsPage';
+import { CartPage } from './pages/CartPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -21,8 +25,12 @@ function App() {
           <Route path="/candles" element={<ProductsPage />} />
           <Route path="/custom" element={<ProductsPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route path="/team/signup" element={<TeamSignupPage />} />
           <Route path="/team/login" element={<TeamLoginPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/liked" element={<LikedProductsPage />} />
+          <Route path="/cart" element={<CartPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/team" element={<TeamPage />} />
           </Route>

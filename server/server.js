@@ -57,6 +57,9 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    username: { type: String },
+    mobile: { type: String },
+    address: { type: String },
 });
 const User = mongoose.model('User', userSchema);
 
@@ -107,19 +110,8 @@ const featuredCollectionSchema = new mongoose.Schema({
 });
 const FeaturedCollection = mongoose.model('FeaturedCollection', featuredCollectionSchema);
 
-// Middleware for authentication
-const auth = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'Authentication token missing' });
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'test');
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ message: 'Invalid token' });
-    }
-};
+import { auth } from './middleware/auth.js';
+import userRoutes from './routes/user.js';
 
 // Routes
 app.get('/api/products', async (req, res) => {

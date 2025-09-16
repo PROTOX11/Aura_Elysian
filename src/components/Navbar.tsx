@@ -68,17 +68,23 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center space-x-4">
-            <button className="p-2 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-full transition-all duration-200">
+            <Link
+              to="/liked"
+              className="p-2 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-full transition-all duration-200"
+            >
               <Heart className="h-5 w-5" />
-            </button>
-            <button className="relative p-2 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-full transition-all duration-200">
+            </Link>
+            <Link
+              to="/cart"
+              className="relative p-2 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-full transition-all duration-200"
+            >
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 3
               </span>
-            </button>
+            </Link>
             <Link
-              to="/login"
+              to="/profile"
               className="p-2 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-full transition-all duration-200"
             >
               <User className="h-5 w-5" />
@@ -138,19 +144,27 @@ export const Navbar: React.FC = () => {
 
               {/* Mobile Actions */}
               <div className="flex items-center justify-around pt-4 border-t border-gray-100">
-                <button className="flex flex-col items-center p-2 text-gray-700 hover:text-pink-600">
+                <Link
+                  to="/liked"
+                  className="flex flex-col items-center p-2 text-gray-700 hover:text-pink-600"
+                  onClick={() => setIsOpen(false)}
+                >
                   <Heart className="h-5 w-5" />
                   <span className="text-xs mt-1">Wishlist</span>
-                </button>
-                <button className="flex flex-col items-center p-2 text-gray-700 hover:text-pink-600 relative">
+                </Link>
+                <Link
+                  to="/cart"
+                  className="flex flex-col items-center p-2 text-gray-700 hover:text-pink-600 relative"
+                  onClick={() => setIsOpen(false)}
+                >
                   <ShoppingBag className="h-5 w-5" />
                   <span className="text-xs mt-1">Cart</span>
                   <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     3
                   </span>
-                </button>
+                </Link>
                 <Link
-                  to="/login"
+                  to="/profile"
                   className="flex flex-col items-center p-2 text-gray-700 hover:text-pink-600"
                   onClick={() => setIsOpen(false)}
                 >
