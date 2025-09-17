@@ -141,6 +141,16 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
+app.get('/api/products/:id/reviews', async (req, res) => {
+  try {
+    const reviews = await ProductReview.find({ productId: req.params.id });
+    res.json(reviews);
+  } catch (error) {
+    console.error('Error fetching product reviews:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.post('/api/products', auth, upload.single('image'), async (req, res) => {
     console.log('Received authenticated request to add product:', req.body);
     try {
@@ -274,8 +284,15 @@ app.get('/api/testimonials', async (req, res) => {
 app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => {
     console.log('Received authenticated request to add testimonial:', req.body);
     try {
+        // Get user name
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         const testimonialData = {
             ...req.body,
+            name: user.name,
             image: req.file ? `/uploads/${req.file.filename}` : '',
         };
         let savedItem;

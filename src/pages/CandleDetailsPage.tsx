@@ -20,6 +20,16 @@ interface Product {
   description?: string;
 }
 
+interface Review {
+  _id: string;
+  name: string;
+  text: string;
+  rating: number;
+  image?: string;
+  orderId: string;
+  productId?: string;
+}
+
 const CandleDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -33,6 +43,7 @@ const CandleDetailsPage: React.FC = () => {
   const [reviewImage, setReviewImage] = useState<File | null>(null);
   const [rating, setRating] = useState(0);
   const [loadingReview, setLoadingReview] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const handleQuantityChange = async (newQuantity: number) => {
     const token = localStorage.getItem('token');
@@ -107,7 +118,7 @@ const CandleDetailsPage: React.FC = () => {
     const formData = new FormData();
     formData.append('productId', id!);
     formData.append('rating', rating.toString());
-    formData.append('review', reviewText);
+    formData.append('text', reviewText);  // Changed from 'review' to 'text' to match backend schema
     if (reviewImage) {
       formData.append('image', reviewImage);
     }
@@ -123,6 +134,9 @@ const CandleDetailsPage: React.FC = () => {
       setReviewText('');
       setReviewImage(null);
       setRating(0);
+      // Refresh reviews
+      const response = await axios.get(`http://localhost:5000/api/products/${id}/reviews`);
+      setReviews(response.data);
     } catch (error) {
       console.error('Error submitting review:', error);
       alert('Failed to submit review');
@@ -145,6 +159,21 @@ const CandleDetailsPage: React.FC = () => {
 
     if (id) {
       fetchProduct();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/products/${id}/reviews`);
+        setReviews(response.data);
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+      }
+    };
+
+    if (id) {
+      fetchReviews();
     }
   }, [id]);
 
@@ -191,7 +220,7 @@ const CandleDetailsPage: React.FC = () => {
       </div>
     );
   }
-  
+
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -205,8 +234,8 @@ const CandleDetailsPage: React.FC = () => {
             <div className="p-4 sm:p-6 lg:p-8">
               <div className="relative aspect-square rounded-2xl overflow-hidden">
                 <img
-                  src={`http://localhost:5000${product.image}`}
-                  alt={product.name}
+                  src={`http://localhost:5000${product?.image}`}
+                  alt={product?.name}
                   className="w-full h-full object-cover"
                 />
                 {discount > 0 && (
@@ -220,8 +249,8 @@ const CandleDetailsPage: React.FC = () => {
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className={`aspect-square rounded-lg ${i === 0 ? 'ring-2 ring-pink-500' : ''} overflow-hidden`}>
                      <img
-                        src={`http://localhost:5000${product.image}`}
-                        alt={`${product.name} thumbnail ${i+1}`}
+                        src={`http://localhost:5000${product?.image}`}
+                        alt={`${product?.name} thumbnail ${i+1}`}
                         className="w-full h-full object-cover"
                       />
                   </div>
@@ -232,8 +261,8 @@ const CandleDetailsPage: React.FC = () => {
             {/* Product Details */}
             <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-between">
               <div>
-                <p className="text-sm font-medium text-pink-600 uppercase tracking-wider">{product.category}</p>
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">{product.name}</h1>
+                <p className="text-sm font-medium text-pink-600 uppercase tracking-wider">{product?.category}</p>
+                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">{product?.name}</h1>
 
                 <div className="flex items-center mb-6">
                   <div className="flex items-center">
@@ -241,7 +270,7 @@ const CandleDetailsPage: React.FC = () => {
                       <Star
                         key={i}
                         className={`h-5 w-5 ${
-                          i < Math.floor(product.rating)
+                          i < Math.floor(product?.rating ?? 0)
                             ? 'text-yellow-400 fill-current'
                             : 'text-gray-300'
                         }`}
@@ -249,14 +278,14 @@ const CandleDetailsPage: React.FC = () => {
                     ))}
                   </div>
                   <span className="ml-3 text-sm text-gray-600">
-                    {(product.rating ?? 0).toFixed(1)} ({product.reviews ?? 0} reviews)
+                    {(product?.rating ?? 0).toFixed(1)} ({product?.reviews ?? 0} reviews)
                   </span>
                 </div>
 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-3 mb-2">
-                    <span className="text-4xl font-bold text-gray-900">₹{product.price}</span>
-                    {product.originalPrice && (
+                    <span className="text-4xl font-bold text-gray-900">₹{product?.price}</span>
+                    {product?.originalPrice && (
                       <span className="text-xl text-gray-400 line-through">
                         ₹{product.originalPrice}
                       </span>
@@ -265,7 +294,7 @@ const CandleDetailsPage: React.FC = () => {
                   <p className="text-sm text-green-600 font-semibold">Inclusive of all taxes</p>
                 </div>
 
-                {product.description && (
+                {product?.description && (
                   <div className="mb-8">
                     <p className="text-gray-600 leading-relaxed">{product.description}</p>
                   </div>
@@ -273,10 +302,10 @@ const CandleDetailsPage: React.FC = () => {
 
                 {/* Product Specs */}
                 <div className="grid grid-cols-2 gap-4 text-sm mb-8">
-                  {product.fragrance && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Fragrance:</span> <span className="text-gray-600">{product.fragrance}</span></div>}
-                  {product.weight && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Weight:</span> <span className="text-gray-600">{product.weight}</span></div>}
-                  {product.container && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Container:</span> <span className="text-gray-600">{product.container}</span></div>}
-                  {product.theme && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Theme:</span> <span className="text-gray-600">{product.theme}</span></div>}
+                  {product?.fragrance && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Fragrance:</span> <span className="text-gray-600">{product.fragrance}</span></div>}
+                  {product?.weight && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Weight:</span> <span className="text-gray-600">{product.weight}</span></div>}
+                  {product?.container && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Container:</span> <span className="text-gray-600">{product.container}</span></div>}
+                  {product?.theme && <div className="p-3 bg-gray-50 rounded-lg"><span className="font-semibold text-gray-800">Theme:</span> <span className="text-gray-600">{product.theme}</span></div>}
                 </div>
               </div>
 
@@ -334,11 +363,54 @@ const CandleDetailsPage: React.FC = () => {
         <div className="mt-16 max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Customer Reviews</h2>
           <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
-            {/* Existing reviews list - placeholder */}
-            <div className="text-center text-gray-500">
-              <p>No reviews yet.</p>
-              <p>Be the first to review this product!</p>
-            </div>
+            {reviews.length === 0 ? (
+              <div className="text-center text-gray-500">
+                <p>No reviews yet.</p>
+                <p>Be the first to review this product!</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+{reviews.map((review) => (
+  <div key={review._id} className="border border-gray-200 rounded-lg p-4">
+    <div className="flex mb-2 items-center">
+      <div className="mr-4 flex flex-col items-center relative">
+        <img
+          src={`http://localhost:5000${review.name ? review.image : '/default-profile.png'}`}
+          alt={review.name}
+          className="w-12 h-12 object-cover rounded-full"
+        />
+        <span className="absolute top-0 left-0 bg-pink-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center select-none">pp</span>
+        <div className="flex mt-1">
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              className={`h-5 w-5 ${
+                i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold text-gray-900">{review.name}</p>
+        <div className="mt-2 flex gap-4 relative">
+          {review.productId && (
+            <img
+              src={`http://localhost:5000${product?.image}`}
+              alt={product?.name}
+              className="w-16 h-16 object-cover rounded-lg"
+            />
+          )}
+          <span className="absolute top-0 left-0 bg-pink-600 text-white text-xs font-bold rounded w-6 h-6 flex items-center justify-center select-none">pi</span>
+          {/* Add more product images if needed */}
+        </div>
+      </div>
+    </div>
+    <p className="text-gray-700">{review.text}</p>
+  </div>
+))}
+              </div>
+            )}
 
             {/* Add Review Form */}
             <div className="border-t border-gray-200 pt-6">
