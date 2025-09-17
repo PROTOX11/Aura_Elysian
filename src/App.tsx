@@ -11,6 +11,7 @@ import TeamLoginPage from './pages/TeamLoginPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LikedProductsPage } from './pages/LikedProductsPage';
 import { CartPage } from './pages/CartPage';
+import CandleDetailsPage from './pages/CandleDetailsPage';
 import CustomOrderPage from './pages/CustomOrderPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/candles" element={<ProductsPage />} />
+          <Route path="/candles/:id" element={<CandleDetailsPage />} />
           <Route path="/custom" element={<CustomOrderPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

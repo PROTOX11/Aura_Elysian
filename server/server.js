@@ -54,6 +54,7 @@ const AuraUser = mongoose.model('AuraUser', auraUserSchema);
 
 import User from './models/User.js';
 import CustomOrder from './models/CustomOrder.js';
+import Cart from './models/Cart.js';
 
 // General User Schema
 // Remove duplicate userSchema and User model definition here to avoid OverwriteModelError
@@ -127,6 +128,19 @@ app.get('/api/products', async (req, res) => {
     res.json(products);
 });
 
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error('Error fetching product by ID:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.post('/api/products', auth, upload.single('image'), async (req, res) => {
     console.log('Received authenticated request to add product:', req.body);
     try {
@@ -148,20 +162,99 @@ app.post('/api/products', auth, upload.single('image'), async (req, res) => {
 });
 
 // Custom Orders API
-app.post('/api/custom-orders', upload.single('image'), async (req, res) => {
+app.post('/api/custom-orders', auth, upload.single('image'), async (req, res) => {
     try {
+        console.log('req.user:', req.user);
+        console.log('req.user.id:', req.user.id);
         const customOrderData = {
-            userId: req.user ? req.user.id : null,
+            userId: req.user.id,
             image: req.file ? `/uploads/${req.file.filename}` : '',
             description: req.body.description || '',
             referenceLink: req.body.referenceLink || '',
         };
+        console.log('customOrderData:', customOrderData);
         const customOrder = new CustomOrder(customOrderData);
         const savedOrder = await customOrder.save();
+        console.log('savedOrder:', savedOrder);
         res.status(201).json({ message: 'Custom order submitted successfully', id: savedOrder._id });
     } catch (error) {
         console.error('Error saving custom order:', error.stack || error);
         res.status(500).json({ message: 'Failed to submit custom order' });
+    }
+});
+
+// Cart API
+
+app.get('/api/cart', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const cartItems = await Cart.find({ userId }).populate('productId');
+        res.json(cartItems);
+    } catch (error) {
+        console.error('Error fetching cart:', error);
+        res.status(500).json({ message: 'Failed to fetch cart' });
+    }
+});
+
+app.put('/api/cart', auth, async (req, res) => {
+    const { productId, quantity } = req.body;
+    const userId = req.user.id;
+
+    try {
+        let cart = await Cart.findOne({ userId });
+
+        if (!cart && quantity > 0) {
+            // If no cart, create one
+            const product = await Product.findById(productId);
+            if (!product) return res.status(404).json({ message: 'Product not found' });
+            
+            const newCart = await Cart.create({
+                userId,
+                products: [{ 
+                    productId, 
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                    quantity 
+                }],
+            });
+            return res.status(201).json(newCart);
+        }
+        
+        if (cart) {
+            const itemIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+
+            if (itemIndex > -1) {
+                // Product exists in cart
+                if (quantity > 0) {
+                    cart.products[itemIndex].quantity = quantity;
+                } else {
+                    cart.products.splice(itemIndex, 1);
+                }
+            } else if (quantity > 0) {
+                // Product not in cart, add it
+                const product = await Product.findById(productId);
+                if (!product) return res.status(404).json({ message: 'Product not found' });
+
+                cart.products.push({ 
+                    productId, 
+                    name: product.name,
+                    price: product.price,
+                    image: product.image,
+                    quantity 
+                });
+            }
+            // If itemIndex is -1 and quantity is 0, do nothing
+
+            cart = await cart.save();
+            return res.status(200).json(cart);
+        }
+        
+        return res.status(400).json({ message: "Invalid request" });
+
+    } catch (error) {
+        console.error('Error updating cart:', error);
+        res.status(500).send('Something went wrong');
     }
 });
 

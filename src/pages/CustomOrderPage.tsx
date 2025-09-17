@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const CustomOrderPage: React.FC = () => {
@@ -7,6 +8,18 @@ const CustomOrderPage: React.FC = () => {
   const [referenceLink, setReferenceLink] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if there's stored form data from previous attempt
+    const storedData = localStorage.getItem('customOrderData');
+    if (storedData) {
+      const { description, referenceLink } = JSON.parse(storedData);
+      setDescription(description || '');
+      setReferenceLink(referenceLink || '');
+      localStorage.removeItem('customOrderData');
+    }
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -19,6 +32,19 @@ const CustomOrderPage: React.FC = () => {
     setLoading(true);
     setMessage('');
 
+    const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
+    if (!token) {
+      // Store form data and redirect to login
+      const formData = {
+        description,
+        referenceLink,
+      };
+      localStorage.setItem('customOrderData', JSON.stringify(formData));
+      localStorage.setItem('redirectAfterLogin', '/custom');
+      navigate('/login');
+      return;
+    }
+
     const formData = new FormData();
     if (image) formData.append('image', image);
     if (description) formData.append('description', description);
@@ -28,6 +54,7 @@ const CustomOrderPage: React.FC = () => {
       const response = await axios.post('http://localhost:5000/api/custom-orders', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
         },
       });
       setMessage('Custom order submitted successfully! We promise lower prices than others.');

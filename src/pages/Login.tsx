@@ -32,7 +32,9 @@ export const LoginPage: React.FC = () => {
 
             const { token } = await response.json();
             localStorage.setItem('token', token);
-            navigate('/');
+            const redirectTo = localStorage.getItem('redirectAfterLogin') || '/';
+            localStorage.removeItem('redirectAfterLogin');
+            navigate(redirectTo);
         } catch (err: any) {
             setError(err.message);
         }

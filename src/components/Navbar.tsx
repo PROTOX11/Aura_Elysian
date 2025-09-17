@@ -3,11 +3,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ShoppingBag, Heart, User, Menu, X } from 'lucide-react';
 import { Logo } from './Logo';
+import { useCart } from '../context/CartContext';
 
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
+  const { getCartCount } = useCart();
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -80,7 +82,7 @@ export const Navbar: React.FC = () => {
             >
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                3
+                {getCartCount()}
               </span>
             </Link>
             <Link
@@ -160,7 +162,7 @@ export const Navbar: React.FC = () => {
                   <ShoppingBag className="h-5 w-5" />
                   <span className="text-xs mt-1">Cart</span>
                   <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    3
+                    {getCartCount()}
                   </span>
                 </Link>
                 <Link

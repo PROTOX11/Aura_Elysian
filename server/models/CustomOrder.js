@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const customOrderSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     image: { type: String, required: false },
     description: { type: String, required: false },
     referenceLink: { type: String, required: false },

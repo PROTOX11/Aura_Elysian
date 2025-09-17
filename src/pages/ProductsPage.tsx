@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
@@ -14,21 +15,57 @@ interface Product {
   category: string;
   rating: number;
   reviews: number;
+  festival?: string[];
+  fragrance?: string;
+  weight?: string;
 }
 
 export const ProductsPage: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [maxPrice, setMaxPrice] = useState(1000);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [cartItems, setCartItems] = useState<{ [productId: string]: number }>({});
+
+  const [selectedFestivals, setSelectedFestivals] = useState<string[]>([]);
+  const [selectedFragrances, setSelectedFragrances] = useState<string[]>([]);
+
+  const isCandlesPage = location.pathname === '/candles';
+
+  const handleCartUpdate = (productId: string, quantity: number) => {
+    setCartItems(prev => {
+      const newCart = { ...prev };
+      if (quantity > 0) {
+        newCart[productId] = quantity;
+      } else {
+        delete newCart[productId];
+      }
+      return newCart;
+    });
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/products');
-        setAllProducts(res.data.map((p: any) => ({ ...p, id: p._id })));
+        const products = res.data;
+        console.log('Fetched products:', products);
+
+        if (products.length > 0) {
+          const maxProductPrice = Math.ceil(Math.max(...products.map((p: Product) => p.price)));
+          setMaxPrice(maxProductPrice);
+          setPriceRange([0, maxProductPrice]);
+        }
+
+        setAllProducts(products.map((p: any) => ({
+          ...p,
+          id: p._id,
+          image: p.image.startsWith('http') ? p.image : `http://localhost:5000${p.image}`
+        })));
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -36,20 +73,45 @@ export const ProductsPage: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const categories = ['All', 'Candles', 'Custom'];
+  useEffect(() => {
+    const fetchCart = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await axios.get('http://localhost:5000/api/cart', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const cartData = res.data.reduce((acc: any, cart: any) => {
+            cart.products.forEach((p: any) => {
+              acc[p.productId] = p.quantity;
+            });
+            return acc;
+          }, {});
+          setCartItems(cartData);
+        } catch (error) {
+          console.error('Error fetching cart:', error);
+        }
+      }
+    };
+    fetchCart();
+  }, []);
+  
+  const categories = ['All', 'Candle', 'Custom'];
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'price-low', label: 'Price: Low to High' },
     { value: 'price-high', label: 'Price: High to Low' },
-    { value: 'rating', label: 'Highest Rated' },
     { value: 'popular', label: 'Most Popular' },
   ];
 
   const filteredProducts = allProducts.filter(product => {
-    const categoryMatch = selectedCategory === 'All' || product.category === selectedCategory;
+    const categoryMatch = isCandlesPage ? product.category.toLowerCase() === 'candle' : true;
     const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-    return categoryMatch && priceMatch;
+    const festivalMatch = selectedFestivals.length === 0 || (product.festival && product.festival.some(f => selectedFestivals.includes(f)));
+    const fragranceMatch = selectedFragrances.length === 0 || (product.fragrance && selectedFragrances.includes(product.fragrance));
+    return categoryMatch && priceMatch && festivalMatch && fragranceMatch;
   });
+
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
@@ -57,8 +119,6 @@ export const ProductsPage: React.FC = () => {
         return a.price - b.price;
       case 'price-high':
         return b.price - a.price;
-      case 'rating':
-        return b.rating - a.rating;
       case 'popular':
         return b.reviews - a.reviews;
       default:
@@ -77,10 +137,13 @@ export const ProductsPage: React.FC = () => {
           className="mb-8"
         >
           <h1 className="font-serif text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Our Collection
+            {isCandlesPage ? 'Handcrafted Candles' : 'Our Collection'}
           </h1>
           <p className="text-lg text-gray-600">
-            Discover our complete range of handcrafted candles, and custom pieces
+            {isCandlesPage
+              ? 'Discover our exquisite collection of handcrafted candles, made with love and the finest ingredients'
+              : 'Discover our complete range of handcrafted candles, and custom pieces'
+            }
           </p>
         </motion.div>
 
@@ -95,44 +158,71 @@ export const ProductsPage: React.FC = () => {
             >
               <h2 className="font-semibold text-gray-900 text-lg">Filters</h2>
 
-              {/* Categories */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-3">Category</h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                        selectedCategory === category
-                          ? 'bg-pink-100 text-pink-700'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Price Range */}
               <div>
                 <h3 className="font-medium text-gray-900 mb-3">Price Range</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
+                    <span>₹{priceRange[0]}</span>
+                    <span>₹{priceRange[1]}</span>
                   </div>
                   <input
                     type="range"
                     min="0"
-                    max="100"
+                    max={maxPrice}
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                 </div>
               </div>
+
+              {/* Festivals */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">By Occasion</h3>
+                <div className="space-y-2">
+                  {['Diwali', 'Holi', 'Valentine', 'Birthday', 'Anniversary', 'Christmas'].map(festival => (
+                    <label key={festival} className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        value={festival}
+                        onChange={e => {
+                          const { value, checked } = e.target;
+                          setSelectedFestivals(prev =>
+                            checked ? [...prev, value] : prev.filter(item => item !== value)
+                          );
+                        }}
+                        className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                      />
+                      <span className="text-sm text-gray-600">{festival}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fragrance */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">By Fragrance</h3>
+                <div className="space-y-2">
+                  {['Sandalwood', 'Rose', 'Jasmine'].map(fragrance => (
+                    <label key={fragrance} className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        value={fragrance}
+                        onChange={e => {
+                          const { value, checked } = e.target;
+                          setSelectedFragrances(prev =>
+                            checked ? [...prev, value] : prev.filter(item => item !== value)
+                          );
+                        }}
+                        className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                      />
+                      <span className="text-sm text-gray-600">{fragrance}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
             </motion.div>
           </div>
 
@@ -208,7 +298,8 @@ export const ProductsPage: React.FC = () => {
                   : 'grid-cols-1'
               }`}
             >
-              {sortedProducts.map((product, index) => (
+            {sortedProducts.length > 0 ? (
+              sortedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   layout
@@ -218,15 +309,12 @@ export const ProductsPage: React.FC = () => {
                 >
                   <ProductCard
                     product={product}
-                    onLike={(id) => console.log('Liked product:', id)}
-                    onAddToCart={(id) => console.log('Added to cart:', id)}
+                    onCartUpdate={handleCartUpdate}
+                    quantity={cartItems[product.id] || 0}
                   />
                 </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Empty State */}
-            {sortedProducts.length === 0 && (
+              ))
+            ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -239,6 +327,24 @@ export const ProductsPage: React.FC = () => {
                 <p className="text-gray-500">Try adjusting your filters to see more results.</p>
               </motion.div>
             )}
+            </motion.div>
+
+            {/* Empty State */}
+            {false && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-16"
+              >
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Filter className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="font-medium text-gray-900 mb-2">No products found</h3>
+                <p className="text-gray-500">Try adjusting your filters to see more results.</p>
+              </motion.div>
+            )}
+
+            {/* Debug: Show count of products */}
           </div>
         </div>
       </div>
