@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
+import { useCart } from '../context/CartContext';
 
 interface Product {
   _id: string;
@@ -23,29 +24,28 @@ interface Product {
 export const ProductsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { cart, updateCartItemQuantity } = useCart();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [maxPrice, setMaxPrice] = useState(1000);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [cartItems, setCartItems] = useState<{ [productId: string]: number }>({});
 
   const [selectedFestivals, setSelectedFestivals] = useState<string[]>([]);
   const [selectedFragrances, setSelectedFragrances] = useState<string[]>([]);
 
+  // Custom Order State
+  const [customImage, setCustomImage] = useState<File | null>(null);
+  const [customDescription, setCustomDescription] = useState('');
+  const [customReferenceLink, setCustomReferenceLink] = useState('');
+  const [customLoading, setCustomLoading] = useState(false);
+  const [customMessage, setCustomMessage] = useState('');
+
   const isCandlesPage = location.pathname === '/candles';
 
   const handleCartUpdate = (productId: string, quantity: number) => {
-    setCartItems(prev => {
-      const newCart = { ...prev };
-      if (quantity > 0) {
-        newCart[productId] = quantity;
-      } else {
-        delete newCart[productId];
-      }
-      return newCart;
-    });
+    updateCartItemQuantity(productId, quantity);
   };
 
   useEffect(() => {
@@ -73,28 +73,7 @@ export const ProductsPage: React.FC = () => {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    const fetchCart = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const res = await axios.get('http://localhost:5000/api/cart', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const cartData = res.data.reduce((acc: any, cart: any) => {
-            cart.products.forEach((p: any) => {
-              acc[p.productId] = p.quantity;
-            });
-            return acc;
-          }, {});
-          setCartItems(cartData);
-        } catch (error) {
-          console.error('Error fetching cart:', error);
-        }
-      }
-    };
-    fetchCart();
-  }, []);
+
   
   const categories = ['All', 'Candle', 'Custom'];
   const sortOptions = [
@@ -307,11 +286,11 @@ export const ProductsPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  <ProductCard
-                    product={product}
-                    onCartUpdate={handleCartUpdate}
-                    quantity={cartItems[product.id] || 0}
-                  />
+            <ProductCard
+              product={product}
+              onCartUpdate={handleCartUpdate}
+              quantity={cart.find(item => item.productId === product.id)?.quantity || 0}
+            />
                 </motion.div>
               ))
             ) : (

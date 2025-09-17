@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Plus, Minus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 interface Product {
   id: string;
@@ -33,42 +32,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [currentQuantity, setCurrentQuantity] = useState(quantity);
   const navigate = useNavigate();
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setCurrentQuantity(quantity);
   }, [quantity]);
-  
+
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
-
-  const updateCartAPI = useCallback(async (productId: string, newQuantity: number) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      // Don't navigate here, just prevent action. Parent can handle nav.
-      console.error("No token found");
-      return;
-    }
-    try {
-      await axios.put('http://localhost:5000/api/cart', 
-        { productId, quantity: newQuantity },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (error) {
-      console.error('Failed to update cart:', error);
-      // Optionally revert state on error
-    }
-  }, []);
-
-  const debouncedUpdate = useCallback((productId: string, newQuantity: number) => {
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-    debounceTimer.current = setTimeout(() => {
-      updateCartAPI(productId, newQuantity);
-    }, 500);
-  }, [updateCartAPI]);
 
   const handleQuantityChange = (newQuantity: number) => {
     const token = localStorage.getItem('token');
@@ -80,7 +51,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     newQuantity = Math.max(0, newQuantity);
     setCurrentQuantity(newQuantity);
     onCartUpdate(product.id, newQuantity);
-    debouncedUpdate(product.id, newQuantity);
   };
 
   const handleLikeClick = (e: React.MouseEvent) => {
@@ -176,14 +146,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </div>
             {currentQuantity > 0 ? (
               <div className="flex items-center justify-center rounded-full bg-pink-100 text-pink-700 font-bold text-xs overflow-hidden">
-                <button 
+                <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuantityChange(currentQuantity - 1); }}
                   className="p-2 hover:bg-pink-200 transition-colors"
                 >
                   <Minus size={12} />
                 </button>
                 <span className="px-2">{currentQuantity}</span>
-                <button 
+                <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleQuantityChange(currentQuantity + 1); }}
                   className="p-2 hover:bg-pink-200 transition-colors"
                 >
@@ -205,6 +175,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </motion.button>
             )}
           </div>
+          {currentQuantity > 0 && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate('/cart'); }}
+              className="w-full bg-pink-600 text-white text-sm font-bold py-2 rounded-lg hover:bg-pink-700 transition-colors mt-2"
+            >
+              Go to Cart
+            </button>
+          )}
         </div>
       </motion.div>
     </Link>

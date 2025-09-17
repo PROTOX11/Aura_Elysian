@@ -4,8 +4,6 @@ import { Trash2, Plus, Minus } from 'lucide-react';
 import axios from 'axios';
 
 interface CartItem {
-    _id: string;
-    userId: string;
     productId: {
         _id: string;
         name: string;
@@ -33,7 +31,7 @@ export const CartPage: React.FC = () => {
             const response = await axios.get('http://localhost:5000/api/cart', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setCartItems(response.data);
+            setCartItems(response.data.products || []);
         } catch (error) {
             console.error('Error fetching cart:', error);
         } finally {
@@ -41,31 +39,15 @@ export const CartPage: React.FC = () => {
         }
     };
 
-    const updateQuantity = async (cartId: string, newQuantity: number) => {
-        if (newQuantity <= 0) {
-            removeItem(cartId);
-            return;
-        }
+    const updateQuantity = async (productId: string, newQuantity: number) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:5000/api/cart/${cartId}`, { quantity: newQuantity }, {
+            await axios.put('http://localhost:5000/api/cart', { productId, quantity: newQuantity }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchCart(); // Refresh cart
         } catch (error) {
             console.error('Error updating quantity:', error);
-        }
-    };
-
-    const removeItem = async (cartId: string) => {
-        try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/cart/${cartId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchCart(); // Refresh cart
-        } catch (error) {
-            console.error('Error removing item:', error);
         }
     };
 
@@ -83,7 +65,7 @@ export const CartPage: React.FC = () => {
                     <div className="space-y-6">
                         {cartItems.map((item) => (
                             <motion.div
-                                key={item._id}
+                                key={item.productId._id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="bg-white rounded-lg shadow p-6 flex items-center gap-4"
@@ -91,25 +73,25 @@ export const CartPage: React.FC = () => {
                                 <img src={`http://localhost:5000${item.productId.image}`} alt={item.productId.name} className="w-20 h-20 object-cover rounded" />
                                 <div className="flex-1">
                                     <h3 className="font-semibold text-gray-900">{item.productId.name}</h3>
-                                    <p className="text-pink-600 font-medium">${item.productId.price}</p>
+                                    <p className="text-pink-600 font-medium">₹{item.productId.price}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                                        onClick={() => updateQuantity(item.productId._id, item.quantity - 1)}
                                         className="p-1 text-gray-500 hover:text-gray-700"
                                     >
                                         <Minus className="h-4 w-4" />
                                     </button>
                                     <span className="w-8 text-center">{item.quantity}</span>
                                     <button
-                                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                                        onClick={() => updateQuantity(item.productId._id, item.quantity + 1)}
                                         className="p-1 text-gray-500 hover:text-gray-700"
                                     >
                                         <Plus className="h-4 w-4" />
                                     </button>
                                 </div>
                                 <button
-                                    onClick={() => removeItem(item._id)}
+                                    onClick={() => updateQuantity(item.productId._id, 0)}
                                     className="p-2 text-red-500 hover:text-red-700"
                                 >
                                     <Trash2 className="h-5 w-5" />
@@ -118,7 +100,7 @@ export const CartPage: React.FC = () => {
                         ))}
                         <div className="bg-white rounded-lg shadow p-6">
                             <div className="flex justify-between items-center">
-                                <span className="text-lg font-semibold">Total: ${total.toFixed(2)}</span>
+                                <span className="text-lg font-semibold">Total: ₹{total.toFixed(2)}</span>
                                 <button className="bg-pink-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-pink-600">
                                     Checkout
                                 </button>

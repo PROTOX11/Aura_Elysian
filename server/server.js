@@ -188,8 +188,11 @@ app.post('/api/custom-orders', auth, upload.single('image'), async (req, res) =>
 app.get('/api/cart', auth, async (req, res) => {
     try {
         const userId = req.user.id;
-        const cartItems = await Cart.find({ userId }).populate('productId');
-        res.json(cartItems);
+        const cart = await Cart.findOne({ userId });
+        if (!cart) {
+            return res.json({ products: [] });
+        }
+        res.json(cart);
     } catch (error) {
         console.error('Error fetching cart:', error);
         res.status(500).json({ message: 'Failed to fetch cart' });
