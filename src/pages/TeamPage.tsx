@@ -97,7 +97,7 @@ export const TeamPage: React.FC = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="relative min-h-[400px] sm:min-h-[500px]">
+                    <div className="relative">
                         <AnimatePresence initial={false} custom={direction}>
                             <motion.div
                                 key={activeTab}
@@ -110,7 +110,7 @@ export const TeamPage: React.FC = () => {
                                     x: { type: 'spring', stiffness: 200, damping: 20 }, // Adjusted for mobile performance
                                     opacity: { duration: 0.15 }, // Faster opacity transition
                                 }}
-                                className="w-full h-full p-2 sm:p-4"
+                                className="w-full p-2 sm:p-4"
                             >
                                 {activeTab === 'addProduct' && <AddProductForm />}
                                 {activeTab === 'addReviews' && <AddReviewsForm />}

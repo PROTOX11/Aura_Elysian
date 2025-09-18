@@ -53,6 +53,7 @@ const CandleDetailsPage: React.FC = () => {
   const [loadingReview, setLoadingReview] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [currentMainImage, setCurrentMainImage] = useState<string | null>(null);
 
   // Get current quantity of this product in cart from context
   const cartItem = cart.find(item => item.productId === id);
@@ -131,6 +132,8 @@ const CandleDetailsPage: React.FC = () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/products/${id}`);
         setProduct(response.data);
+        // Set initial main image to primaryImage
+        setCurrentMainImage(response.data.primaryImage);
       } catch (err) {
         setError('Failed to load product');
       } finally {
@@ -192,7 +195,7 @@ const CandleDetailsPage: React.FC = () => {
             <div className="p-4 sm:p-6 lg:p-8">
               <div className="relative aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden">
                 <img
-                  src={`http://localhost:5000${product?.primaryImage}`}
+                  src={`http://localhost:5000${currentMainImage || product?.primaryImage}`}
                   alt={product?.name}
                   className="w-full h-full object-cover"
                 />
@@ -205,7 +208,11 @@ const CandleDetailsPage: React.FC = () => {
               {/* Thumbnails */}
               <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
                 {product?.images?.map((img, i) => (
-                  <div key={i} className={`aspect-square rounded-lg ${img === product.primaryImage ? 'ring-2 ring-pink-500' : ''} overflow-hidden`}>
+                  <div
+                    key={i}
+                    className={`aspect-square rounded-lg overflow-hidden cursor-pointer ${img === currentMainImage ? 'ring-2 ring-pink-500' : ''}`}
+                    onClick={() => setCurrentMainImage(img)}
+                  >
                     <img
                       src={`http://localhost:5000${img}`}
                       alt={`${product?.name} thumbnail ${i + 1}`}

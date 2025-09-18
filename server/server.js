@@ -388,8 +388,8 @@ app.post('/api/signup', async (req, res) => {
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: 'User already exists' });
-        const hashedPassword = await bcrypt.hash(password, 12);
-        const result = await User.create({ name, email, password: hashedPassword });
+        // Store password as plain text (insecure)
+        const result = await User.create({ name, email, password });
         res.status(201).json({ result });
     } catch (error) {
         console.error(error);
@@ -401,9 +401,17 @@ app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const existingUser = await User.findOne({ email });
-        if (!existingUser) return res.status(404).json({ message: "User doesn't exist" });
-        const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
-        if (!isPasswordCorrect) return res.status(400).json({ message: 'Invalid credentials' });
+        console.log('Login attempt:', { email, password });
+        if (!existingUser) {
+            console.log('User not found for email:', email);
+            return res.status(404).json({ message: "User doesn't exist" });
+        }
+        console.log('Stored password:', existingUser.password);
+        // Compare plain text passwords (insecure)
+        if (password !== existingUser.password) {
+            console.log('Password mismatch:', { received: password, stored: existingUser.password });
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
         const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET || 'test', { expiresIn: '1h' });
         res.status(200).json({ result: existingUser, token });
     } catch (error) {
