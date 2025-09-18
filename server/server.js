@@ -103,6 +103,7 @@ const productReviewSchema = new mongoose.Schema({
     image: String,
     orderId: String,
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 });
 const ProductReview = mongoose.model('ProductReview', productReviewSchema);
 
@@ -143,7 +144,7 @@ app.get('/api/products/:id', async (req, res) => {
 
 app.get('/api/products/:id/reviews', async (req, res) => {
   try {
-    const reviews = await ProductReview.find({ productId: req.params.id });
+    const reviews = await ProductReview.find({ productId: req.params.id }).populate('userId', 'name email image');
     res.json(reviews);
   } catch (error) {
     console.error('Error fetching product reviews:', error);
@@ -294,6 +295,7 @@ app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => 
             ...req.body,
             name: user.name,
             image: req.file ? `/uploads/${req.file.filename}` : '',
+            userId: req.user.id,
         };
         let savedItem;
         if (testimonialData.productId) {

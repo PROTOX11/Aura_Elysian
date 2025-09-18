@@ -11,19 +11,23 @@ interface Order {
   items: number;
 }
 
+interface User {
+  name: string;
+  email: string;
+  username?: string;
+  mobile?: string;
+  address?: string;
+  image?: string;
+}
+
 export const ProfilePage: React.FC = () => {
-  const [user, setUser] = useState<{
-    name: string;
-    email: string;
-    username?: string;
-    mobile?: string;
-    address?: string;
-  } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isEditingMobile, setIsEditingMobile] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [tempMobile, setTempMobile] = useState('');
   const [tempAddress, setTempAddress] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -136,6 +140,32 @@ export const ProfilePage: React.FC = () => {
     setTempAddress('');
   };
 
+  const handleSaveImage = async () => {
+    if (!imageFile) return;
+    const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await fetch('http://localhost:5000/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setImageFile(null);
+      } else {
+        console.error('Failed to update image');
+      }
+    } catch (error) {
+      console.error('Error updating image:', error);
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -154,9 +184,36 @@ export const ProfilePage: React.FC = () => {
           className="bg-white rounded-2xl shadow-lg p-8"
         >
           <div className="text-center mb-8">
-            <div className="w-24 h-24 bg-gradient-to-r from-pink-400 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <UserIcon className="h-12 w-12 text-white" />
+            <div className="relative w-24 h-24 mx-auto mb-4">
+              <img
+                src={imageFile ? URL.createObjectURL(imageFile) : (user.image ? `http://localhost:5000${user.image}` : 'https://via.placeholder.com/96x96/cccccc/000000?text=Profile')}
+                alt={user.name}
+                className="w-24 h-24 rounded-full object-cover"
+              />
+              <button
+                onClick={() => document.getElementById('profileImageInput')?.click()}
+                className="absolute bottom-0 right-0 bg-pink-500 text-white p-1 rounded-full hover:bg-pink-600 transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
             </div>
+            <input
+              id="profileImageInput"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+              className="hidden"
+            />
+            {imageFile && (
+              <button
+                onClick={handleSaveImage}
+                className="mt-2 px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
+              >
+                Save Profile Picture
+              </button>
+            )}
             <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">
               Welcome back, {user.name}!
             </h1>
@@ -172,6 +229,8 @@ export const ProfilePage: React.FC = () => {
                 <p className="text-sm text-gray-500">Full Name</p>
               </div>
             </div>
+
+
 
             <div className="flex items-center p-4 bg-gray-50 rounded-lg">
               <Mail className="h-6 w-6 text-pink-500 mr-4" />

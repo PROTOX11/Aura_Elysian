@@ -28,6 +28,12 @@ interface Review {
   image?: string;
   orderId: string;
   productId?: string;
+  userId?: {
+    _id: string;
+    name: string;
+    email: string;
+    image?: string;
+  };
 }
 
 const CandleDetailsPage: React.FC = () => {
@@ -373,14 +379,17 @@ const CandleDetailsPage: React.FC = () => {
 {reviews.map((review) => (
   <div key={review._id} className="border border-gray-200 rounded-lg p-4">
     <div className="flex mb-2 items-center">
-      <div className="mr-4 flex flex-col items-center relative">
+      <div className="mr-4 relative">
         <img
-          src={`http://localhost:5000${review.name ? review.image : '/default-profile.png'}`}
+          src={`http://localhost:5000${review.userId?.image ? review.userId.image : '/default-profile.png'}`}
           alt={review.name}
-          className="w-12 h-12 object-cover rounded-full"
+          className="w-16 h-16 object-cover rounded-full"
         />
         <span className="absolute top-0 left-0 bg-pink-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center select-none">pp</span>
-        <div className="flex mt-1">
+      </div>
+      <div className="flex-1">
+        <p className="font-semibold text-gray-900">{review.name}</p>
+        <div className="mt-1 flex">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
@@ -391,19 +400,13 @@ const CandleDetailsPage: React.FC = () => {
           ))}
         </div>
       </div>
-      <div className="flex-1">
-        <p className="font-semibold text-gray-900">{review.name}</p>
-        <div className="mt-2 flex gap-4 relative">
-          {review.productId && (
-            <img
-              src={`http://localhost:5000${product?.image}`}
-              alt={product?.name}
-              className="w-16 h-16 object-cover rounded-lg"
-            />
-          )}
-          <span className="absolute top-0 left-0 bg-pink-600 text-white text-xs font-bold rounded w-6 h-6 flex items-center justify-center select-none">pi</span>
-          {/* Add more product images if needed */}
-        </div>
+      <div className="mr-4 relative">
+        <img
+          src={`http://localhost:5000${review.image ? review.image : '/default-profile.png'}`}
+          alt={review.name}
+          className="w-16 h-16 object-cover rounded-lg"
+        />
+        <span className="absolute top-0 left-0 bg-pink-600 text-white text-xs font-bold rounded w-6 h-6 flex items-center justify-center select-none">pi</span>
       </div>
     </div>
     <p className="text-gray-700">{review.text}</p>
