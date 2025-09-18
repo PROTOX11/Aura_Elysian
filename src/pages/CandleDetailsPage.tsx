@@ -331,7 +331,7 @@ const CandleDetailsPage: React.FC = () => {
                     <div className="flex mb-2 items-center">
                       <div className="mr-4 relative">
                         <img
-                          src={`http://localhost:5000${review.userId?.image ? review.userId.image : '/default-profile.png'}`}
+                          src={`http://localhost:5000${review.userId?.image || review.image || '/default-profile.png'}`}
                           alt={review.name}
                           className="w-12 h-12 object-cover rounded-full"
                         />

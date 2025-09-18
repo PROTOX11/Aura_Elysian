@@ -283,23 +283,50 @@ app.get('/api/testimonials', async (req, res) => {
     res.json(testimonials);
 });
 
-app.post('/api/productreviews', auth, upload.array('images', 3), async (req, res) => {
+app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => {
+    console.log('Received authenticated request to add testimonial:', req.body);
+    try {
+        const testimonialData = {
+            ...req.body,
+            image: req.file ? `/uploads/${req.file.filename}` : '',
+        };
+
+        const testimonial = new Testimonial(testimonialData);
+        const savedItem = await testimonial.save();
+        console.log('Testimonial saved successfully:', savedItem);
+
+        res.status(201).json({ message: 'Testimonial added successfully' });
+    } catch (error) {
+        console.error('Error saving testimonial:', error.stack || error);
+        res.status(500).json({ message: 'Failed to save testimonial' });
+    }
+});
+
+app.post('/api/productreviews', auth, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'images', maxCount: 3 }]), async (req, res) => {
     console.log('Received authenticated request to add product review:', req.body);
     try {
-        // Get user name
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        // Check if user is normal user or aura user
+        let userName = req.body.name;
+        let userId = null;
+
+        const normalUser = await User.findById(req.user.id);
+        if (normalUser) {
+            userName = normalUser.name;
+            userId = req.user.id;
+        } else {
+            // Assume aura user, use name from form
+            userName = req.body.name;
         }
 
-        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+        const profileImagePath = req.files.image ? `/uploads/${req.files.image[0].filename}` : '';
+        const productImagePaths = req.files.images ? req.files.images.map(file => `/uploads/${file.filename}`) : [];
 
         const reviewData = {
             ...req.body,
-            name: user.name,
-            image: imagePaths.length > 0 ? imagePaths[0] : '',
-            images: imagePaths,
-            userId: req.user.id,
+            name: userName,
+            image: profileImagePath,
+            images: productImagePaths,
+            userId: userId,
         };
 
         const productReview = new ProductReview(reviewData);

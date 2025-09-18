@@ -8,6 +8,7 @@ interface ReviewData {
   text: string;
   rating: number;
   image: File | null;
+  reviewImages: File[];
   orderId: string;
   isProductReview: boolean;
   productId: string;
@@ -19,6 +20,7 @@ export const AddReviewsForm: React.FC = () => {
     text: '',
     rating: 5,
     image: null,
+    reviewImages: [],
     orderId: '',
     isProductReview: false,
     productId: '',
@@ -33,6 +35,16 @@ export const AddReviewsForm: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       setReviewData(prev => ({ ...prev, image: file }));
+    }
+  };
+
+  const handleReviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setReviewData(prev => ({
+        ...prev,
+        reviewImages: [...prev.reviewImages, ...filesArray].slice(0, 3) // max 3
+      }));
     }
   };
 
@@ -67,8 +79,16 @@ export const AddReviewsForm: React.FC = () => {
       formDataToSend.append('image', reviewData.image);
     }
 
+    if (reviewData.isProductReview) {
+      reviewData.reviewImages.forEach(file => formDataToSend.append('images', file));
+    }
+
     try {
-      await axios.post('http://localhost:5000/api/testimonials', formDataToSend, {
+      const url = reviewData.isProductReview
+        ? 'http://localhost:5000/api/productreviews'
+        : 'http://localhost:5000/api/testimonials';
+
+      await axios.post(url, formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -80,6 +100,7 @@ export const AddReviewsForm: React.FC = () => {
         text: '',
         rating: 5,
         image: null,
+        reviewImages: [],
         orderId: '',
         isProductReview: false,
         productId: '',
@@ -106,6 +127,28 @@ export const AddReviewsForm: React.FC = () => {
             placeholder="Enter your Order ID"
             className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300"
           />
+        </div>
+        <div>
+          <label className="font-medium text-gray-800">Profile Picture (Required)</label>
+          <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+            <div className="space-y-1 text-center">
+              <div className="flex text-sm text-gray-600">
+                <label htmlFor="profile-image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none">
+                  <span>{reviewData.image ? reviewData.image.name : 'Upload a file'}</span>
+                  <input
+                    id="profile-image-upload"
+                    name="image"
+                    type="file"
+                    className="sr-only"
+                    onChange={handleFileChange}
+                    required
+                  />
+                </label>
+                <p className="pl-1">or drag and drop</p>
+              </div>
+              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+            </div>
+          </div>
         </div>
         <div>
           <label htmlFor="name" className="font-medium text-gray-800">Customer Name</label>
@@ -150,6 +193,43 @@ export const AddReviewsForm: React.FC = () => {
         )}
 
         <div>
+          <label className="font-medium text-gray-800">Product Pictures (Optional, max 3)</label>
+          <div className="mt-2">
+            <div className="flex gap-2">
+              {reviewData.reviewImages.map((file, index) => (
+                <div key={index} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setReviewData(prev => ({ ...prev, reviewImages: prev.reviewImages.filter((_, i) => i !== index) }))}
+                    className="absolute top-1 right-1 bg-pink-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {reviewData.reviewImages.length < 3 && (
+                <label htmlFor="review-images-upload" className="flex items-center justify-center w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer text-pink-600 text-2xl font-bold">
+                  +
+                  <input
+                    id="review-images-upload"
+                    name="images"
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleReviewImageChange}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
           <label htmlFor="text" className="font-medium text-gray-800">Review Text</label>
           <textarea
             id="text"
@@ -185,28 +265,7 @@ export const AddReviewsForm: React.FC = () => {
           </div>
         </div>
 
-        <div>
-          <label className="font-medium text-gray-800">Customer Image (Required)</label>
-          <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              <div className="flex text-sm text-gray-600">
-                <label htmlFor="review-image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none">
-                  <span>{reviewData.image ? reviewData.image.name : 'Upload a file'}</span>
-                  <input
-                    id="review-image-upload"
-                    name="image"
-                    type="file"
-                    className="sr-only"
-                    onChange={handleFileChange}
-                    required
-                  />
-                </label>
-                <p className="pl-1">or drag and drop</p>
-              </div>
-              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-            </div>
-          </div>
-        </div>
+
 
         <div className="flex justify-end">
           <button
@@ -220,3 +279,5 @@ export const AddReviewsForm: React.FC = () => {
     </div>
   );
 };
+
+export default AddReviewsForm;
