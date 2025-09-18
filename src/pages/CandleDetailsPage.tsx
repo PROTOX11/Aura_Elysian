@@ -260,11 +260,11 @@ const CandleDetailsPage: React.FC = () => {
               <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className={`aspect-square rounded-lg ${i === 0 ? 'ring-2 ring-pink-500' : ''} overflow-hidden`}>
-                     <img
-                        src={`http://localhost:5000${product?.image}`}
-                        alt={`${product?.name} thumbnail ${i+1}`}
-                        className="w-full h-full object-cover"
-                      />
+                    <img
+                      src={`http://localhost:5000${product?.image}`}
+                      alt={`${product?.name} thumbnail ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ))}
               </div>
@@ -281,11 +281,10 @@ const CandleDetailsPage: React.FC = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`h-5 w-5 ${
-                          i < Math.floor(product?.rating ?? 0)
+                        className={`h-5 w-5 ${i < Math.floor(product?.rating ?? 0)
                             ? 'text-yellow-400 fill-current'
                             : 'text-gray-300'
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
@@ -370,7 +369,7 @@ const CandleDetailsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Reviews Section */}
         <div className="mt-16 max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Customer Reviews</h2>
@@ -382,60 +381,59 @@ const CandleDetailsPage: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-6">
-{reviews.map((review) => (
-  <div key={review._id} className="border border-gray-200 rounded-lg p-4">
-    <div className="flex mb-2 items-center">
-      <div className="mr-4 relative">
-        <img
-          src={`http://localhost:5000${review.userId?.image ? review.userId.image : '/default-profile.png'}`}
-          alt={review.name}
-          className="w-12 h-12 object-cover rounded-full"
-        />
-      </div>
-      <div className="flex-1">
-        <p className="font-semibold text-gray-900 text-xs">{review.name}</p>
-        <p className="text-gray-700 mt-1 text-xs">{review.text}</p>
-        <div className="mt-1 flex">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`h-4 w-4 ${
-                i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-      <div className="mr-4 relative flex space-x-2 overflow-x-auto max-w-full">
-        {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
-          <img
-            key={idx}
-            src={`http://localhost:5000${imgSrc ? imgSrc : '/default-profile.png'}`}
-            alt={`${review.name} image ${idx + 1}`}
-            className="w-20 h-20 object-cover rounded-lg cursor-pointer flex-shrink-0"
-            onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
-            style={{ transition: 'transform 0.3s ease' }}
-          />
-        ))}
-      </div>
-    </div>
-        </div>
-      ))}
+                {reviews.map((review) => (
+                  <div key={review._id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex mb-2 items-center">
+                      <div className="mr-4 relative">
+                        <img
+                          src={`http://localhost:5000${review.userId?.image ? review.userId.image : '/default-profile.png'}`}
+                          alt={review.name}
+                          className="w-12 h-12 object-cover rounded-full"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-xs">{review.name}</p>
+                        <p className="text-gray-700 mt-1 text-xs">{review.text}</p>
+                        <div className="mt-1 flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="ml-6 mr-4 relative flex space-x-2 overflow-x-auto max-w-full">
+                        {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
+                          <img
+                            key={idx}
+                            src={`http://localhost:5000${imgSrc ? imgSrc : '/default-profile.png'}`}
+                            alt={`${review.name} image ${idx + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg cursor-pointer flex-shrink-0"
+                            onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
+                            style={{ transition: 'transform 0.3s ease' }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
 
-      {zoomedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 cursor-zoom-out transition-opacity duration-500 ease-in-out"
-          onClick={() => setZoomedImage(null)}
-          style={{ backdropFilter: 'blur(4px)' }}
-        >
-          <img
-            src={`http://localhost:5000${zoomedImage}`}
-            alt="Zoomed"
-            className="rounded-lg shadow-lg transition-transform duration-500 ease-in-out"
-            style={{ transform: 'scale(0.7)' }}
-          />
-        </div>
-      )}
+                {zoomedImage && (
+                  <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 cursor-zoom-out transition-opacity duration-500 ease-in-out"
+                    onClick={() => setZoomedImage(null)}
+                    style={{ backdropFilter: 'blur(4px)' }}
+                  >
+                    <img
+                      src={`http://localhost:5000${zoomedImage}`}
+                      alt="Zoomed"
+                      className="rounded-lg shadow-lg transition-transform duration-500 ease-in-out"
+                      style={{ transform: 'scale(0.7)' }}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
@@ -457,43 +455,43 @@ const CandleDetailsPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Images (optional, max 3)
-                </label>
-                <div className="flex items-center space-x-4">
-                  {reviewImages.map((file, index) => (
-                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-300">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setReviewImages(prev => prev.filter((_, i) => i !== index))}
-                        className="absolute top-1 right-1 bg-pink-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Upload Images (optional, max 3)
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    {reviewImages.map((file, index) => (
+                      <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-300">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setReviewImages(prev => prev.filter((_, i) => i !== index))}
+                          className="absolute top-1 right-1 bg-pink-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                    {reviewImages.length < 3 && (
+                      <label
+                        htmlFor="reviewImage"
+                        className="flex items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer text-pink-600 text-3xl font-bold select-none"
                       >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                  {reviewImages.length < 3 && (
-                    <label
-                      htmlFor="reviewImage"
-                      className="flex items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer text-pink-600 text-3xl font-bold select-none"
-                    >
-                      +
-                      <input
-                        type="file"
-                        id="reviewImage"
-                        accept="image/*"
-                        multiple
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
+                        +
+                        <input
+                          type="file"
+                          id="reviewImage"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
