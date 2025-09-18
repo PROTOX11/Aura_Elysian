@@ -7,6 +7,7 @@ export const SignupPage: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -18,6 +19,31 @@ export const SignupPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        try {
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('email', email);
+            formData.append('password', password);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            const response = await fetch('http://localhost:5000/api/signup', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Signup failed');
+            }
+
+            // Redirect to login page on successful signup
+            navigate('/login');
+        } catch (err: any) {
+            setError(err.message);
+        }
 
         try {
             const response = await fetch('http://localhost:5000/api/signup', {
@@ -54,6 +80,7 @@ export const SignupPage: React.FC = () => {
 
                     <motion.form
                         onSubmit={handleSubmit}
+                        encType="multipart/form-data"
                         variants={{
                             initial: { transition: { staggerChildren: 0.1 } },
                             animate: { transition: { staggerChildren: 0.1 } },
@@ -62,6 +89,27 @@ export const SignupPage: React.FC = () => {
                         animate="animate"
                         className="space-y-6"
                     >
+                        <div className="flex flex-col items-center mb-6">
+                            <img
+                                src={imageFile ? URL.createObjectURL(imageFile) : 'https://cdn-icons-png.freepik.com/512/8861/8861091.png'}
+                                alt="Profile Preview"
+                                className="w-24 h-24 rounded-full object-cover mx-auto"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => document.getElementById('profileImageInput')?.click()}
+                                className="mt-2 w-full max-w-xs px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-colors shadow-md whitespace-nowrap"
+                            >
+                                Upload your profile picture
+                            </button>
+                            <input
+                                id="profileImageInput"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                                className="hidden"
+                            />
+                        </div>
                         <motion.div variants={fadeInUp} className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                                 <User className="h-5 w-5" />

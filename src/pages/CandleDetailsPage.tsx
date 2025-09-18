@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Star, ShoppingCart, CreditCard } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 interface Product {
   _id: string;
@@ -40,12 +41,11 @@ interface Review {
 const CandleDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { cart, updateCartItemQuantity } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [isInCart, setIsInCart] = useState(false);
-  const [cartQuantity, setCartQuantity] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [reviewImages, setReviewImages] = useState<File[]>([]);
   const [rating, setRating] = useState(0);
@@ -53,49 +53,17 @@ const CandleDetailsPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
-  const handleQuantityChange = async (newQuantity: number) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+  // Get current quantity of this product in cart from context
+  const cartItem = cart.find(item => item.productId === id);
+  const cartQuantity = cartItem ? cartItem.quantity : 0;
 
-    newQuantity = Math.max(0, newQuantity);
-    try {
-      await axios.put('http://localhost:5000/api/cart',
-        { productId: id, quantity: newQuantity },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (newQuantity > 0) {
-        setIsInCart(true);
-        setCartQuantity(newQuantity);
-      } else {
-        setIsInCart(false);
-        setCartQuantity(0);
-      }
-    } catch (error) {
-      console.error('Error updating cart:', error);
-    }
+  // Handler to update quantity in cart using context method
+  const handleQuantityChange = (newQuantity: number) => {
+    if (newQuantity < 0) return;
+    updateCartItemQuantity(id!, newQuantity);
   };
 
-  const handleAddToCart = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
 
-    try {
-      await axios.put('http://localhost:5000/api/cart',
-        { productId: id, quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setIsInCart(true);
-      setCartQuantity(quantity);
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-    }
-  };
 
   const handleBuyNow = () => {
     const token = localStorage.getItem('token');
@@ -189,30 +157,7 @@ const CandleDetailsPage: React.FC = () => {
     }
   }, [id]);
 
-  useEffect(() => {
-    const checkCart = async () => {
-      const token = localStorage.getItem('token');
-      if (token && id) {
-        try {
-          const res = await axios.get('http://localhost:5000/api/cart', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const products = res.data.products;
-          const item = products.find((p: any) => p.productId === id);
-          if (item) {
-            setIsInCart(true);
-            setCartQuantity(item.quantity);
-          }
-        } catch (error) {
-          console.error('Error checking cart:', error);
-        }
-      }
-    };
 
-    if (product) {
-      checkCart();
-    }
-  }, [product, id]);
 
   if (loading) {
     return (
@@ -322,7 +267,7 @@ const CandleDetailsPage: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="mt-auto">
-                {isInCart ? (
+                {cartQuantity > 0 ? (
                   <div className="mb-6">
                     <div className="flex items-center justify-center rounded-full bg-pink-100 text-pink-700 font-bold text-xs overflow-hidden">
                       <button
@@ -351,16 +296,16 @@ const CandleDetailsPage: React.FC = () => {
                   </div>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {!isInCart && (
+                  {cartQuantity === 0 && (
                     <button
-                      onClick={handleAddToCart}
+                      onClick={() => handleQuantityChange(quantity)}
                       className="w-full bg-pink-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-pink-700 transition-colors flex items-center justify-center gap-2"
                     >
                       <ShoppingCart size={20} />
                       Add to Cart
                     </button>
                   )}
-                  <button onClick={handleBuyNow} className={`w-full ${isInCart ? 'col-span-2' : ''} bg-gray-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-900 transition-colors flex items-center justify-center gap-2`}>
+                  <button onClick={handleBuyNow} className={`w-full ${cartQuantity > 0 ? 'col-span-2' : ''} bg-gray-800 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-900 transition-colors flex items-center justify-center gap-2`}>
                     <ShoppingCart size={20} />
                     Go to Cart
                   </button>

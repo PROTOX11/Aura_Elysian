@@ -85,4 +85,50 @@ router.put('/profile', auth, upload.single('image'), async (req, res) => {
   }
 });
 
+// Signup route with image upload support
+router.post('/signup', upload.single('image'), async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: 'User with this email already exists' });
+    }
+
+    const newUserData = { name, email, password };
+
+    if (req.file) {
+      const uploadDir = 'uploads/';
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir);
+      }
+      const filename = Date.now() + '.jpg';
+      const filepath = path.join(uploadDir, filename);
+      try {
+        await sharp(req.file.buffer)
+          .resize(200, 200, { fit: 'cover' })
+          .jpeg({ quality: 80 })
+          .toFile(filepath);
+        newUserData.image = `/uploads/${filename}`;
+      } catch (error) {
+        console.error('Error processing image:', error);
+        return res.status(500).json({ message: 'Error processing image' });
+      }
+    }
+
+    const newUser = new User(newUserData);
+    await newUser.save();
+
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (error) {
+    console.error('Error during signup:', error.stack || error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
