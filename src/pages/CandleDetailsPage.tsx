@@ -26,6 +26,7 @@ interface Review {
   text: string;
   rating: number;
   image?: string;
+  images?: string[];
   orderId: string;
   productId?: string;
   userId?: {
@@ -46,10 +47,11 @@ const CandleDetailsPage: React.FC = () => {
   const [isInCart, setIsInCart] = useState(false);
   const [cartQuantity, setCartQuantity] = useState(0);
   const [reviewText, setReviewText] = useState('');
-  const [reviewImage, setReviewImage] = useState<File | null>(null);
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
   const [rating, setRating] = useState(0);
   const [loadingReview, setLoadingReview] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   const handleQuantityChange = async (newQuantity: number) => {
     const token = localStorage.getItem('token');
@@ -106,8 +108,12 @@ const CandleDetailsPage: React.FC = () => {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setReviewImage(e.target.files[0]);
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setReviewImages(prev => {
+        const combined = [...prev, ...filesArray];
+        return combined.slice(0, 3); // max 3 images
+      });
     }
   };
 
@@ -125,12 +131,12 @@ const CandleDetailsPage: React.FC = () => {
     formData.append('productId', id!);
     formData.append('rating', rating.toString());
     formData.append('text', reviewText);  // Changed from 'review' to 'text' to match backend schema
-    if (reviewImage) {
-      formData.append('image', reviewImage);
-    }
+    reviewImages.forEach((file) => {
+      formData.append('images', file);
+    });
 
     try {
-      await axios.post('http://localhost:5000/api/testimonials', formData, {
+      await axios.post(`http://localhost:5000/api/productreviews`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
@@ -138,7 +144,7 @@ const CandleDetailsPage: React.FC = () => {
       });
       alert('Review submitted successfully!');
       setReviewText('');
-      setReviewImage(null);
+      setReviewImages([]);
       setRating(0);
       // Refresh reviews
       const response = await axios.get(`http://localhost:5000/api/products/${id}/reviews`);
@@ -385,10 +391,10 @@ const CandleDetailsPage: React.FC = () => {
           alt={review.name}
           className="w-16 h-16 object-cover rounded-full"
         />
-        <span className="absolute top-0 left-0 bg-pink-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center select-none">pp</span>
       </div>
       <div className="flex-1">
         <p className="font-semibold text-gray-900">{review.name}</p>
+        <p className="text-gray-700 mt-1">{review.text}</p>
         <div className="mt-1 flex">
           {[...Array(5)].map((_, i) => (
             <Star
@@ -400,18 +406,36 @@ const CandleDetailsPage: React.FC = () => {
           ))}
         </div>
       </div>
-      <div className="mr-4 relative">
-        <img
-          src={`http://localhost:5000${review.image ? review.image : '/default-profile.png'}`}
-          alt={review.name}
-          className="w-16 h-16 object-cover rounded-lg"
-        />
-        <span className="absolute top-0 left-0 bg-pink-600 text-white text-xs font-bold rounded w-6 h-6 flex items-center justify-center select-none">pi</span>
+      <div className="mr-4 relative flex space-x-2">
+        {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
+          <img
+            key={idx}
+            src={`http://localhost:5000${imgSrc ? imgSrc : '/default-profile.png'}`}
+            alt={`${review.name} image ${idx + 1}`}
+            className="w-20 h-20 object-cover rounded-lg cursor-pointer"
+            onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
+            style={{ transition: 'transform 0.3s ease' }}
+          />
+        ))}
       </div>
     </div>
-    <p className="text-gray-700">{review.text}</p>
-  </div>
-))}
+        </div>
+      ))}
+
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 cursor-zoom-out transition-opacity duration-500 ease-in-out"
+          onClick={() => setZoomedImage(null)}
+          style={{ backdropFilter: 'blur(4px)' }}
+        >
+          <img
+            src={`http://localhost:5000${zoomedImage}`}
+            alt="Zoomed"
+            className="rounded-lg shadow-lg transition-transform duration-500 ease-in-out"
+            style={{ transform: 'scale(0.7)' }}
+          />
+        </div>
+      )}
               </div>
             )}
 
@@ -433,16 +457,43 @@ const CandleDetailsPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label htmlFor="reviewImage" className="block text-sm font-medium text-gray-700">
-                    Upload Image (optional)
-                  </label>
-                  <input
-                    type="file"
-                    id="reviewImage"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
-                  />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Images (optional, max 3)
+                </label>
+                <div className="flex items-center space-x-4">
+                  {reviewImages.map((file, index) => (
+                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-300">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setReviewImages(prev => prev.filter((_, i) => i !== index))}
+                        className="absolute top-1 right-1 bg-pink-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                  {reviewImages.length < 3 && (
+                    <label
+                      htmlFor="reviewImage"
+                      className="flex items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer text-pink-600 text-3xl font-bold select-none"
+                    >
+                      +
+                      <input
+                        type="file"
+                        id="reviewImage"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>

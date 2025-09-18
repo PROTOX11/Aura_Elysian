@@ -282,8 +282,8 @@ app.get('/api/testimonials', async (req, res) => {
     res.json(testimonials);
 });
 
-app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => {
-    console.log('Received authenticated request to add testimonial:', req.body);
+app.post('/api/productreviews', auth, upload.array('images', 3), async (req, res) => {
+    console.log('Received authenticated request to add product review:', req.body);
     try {
         // Get user name
         const user = await User.findById(req.user.id);
@@ -291,28 +291,24 @@ app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => 
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const testimonialData = {
+        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+
+        const reviewData = {
             ...req.body,
             name: user.name,
-            image: req.file ? `/uploads/${req.file.filename}` : '',
+            image: imagePaths.length > 0 ? imagePaths[0] : '',
+            images: imagePaths,
             userId: req.user.id,
         };
-        let savedItem;
-        if (testimonialData.productId) {
-            // Save as product review
-            const productReview = new ProductReview(testimonialData);
-            savedItem = await productReview.save();
-            console.log('Product review saved successfully:', savedItem);
-        } else {
-            // Save as general testimonial
-            const testimonial = new Testimonial(testimonialData);
-            savedItem = await testimonial.save();
-            console.log('Testimonial saved successfully:', savedItem);
-        }
-        res.status(201).json({ message: 'Review added successfully' });
+
+        const productReview = new ProductReview(reviewData);
+        const savedItem = await productReview.save();
+        console.log('Product review saved successfully:', savedItem);
+
+        res.status(201).json({ message: 'Product review added successfully' });
     } catch (error) {
-        console.error('Error saving review:', error.stack || error);
-        res.status(500).json({ message: 'Failed to save review' });
+        console.error('Error saving product review:', error.stack || error);
+        res.status(500).json({ message: 'Failed to save product review' });
     }
 });
 
