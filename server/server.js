@@ -101,6 +101,7 @@ const productReviewSchema = new mongoose.Schema({
     text: String,
     rating: Number,
     image: String,
+    images: [String],
     orderId: String,
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

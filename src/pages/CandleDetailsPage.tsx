@@ -244,7 +244,7 @@ const CandleDetailsPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Image Gallery */}
             <div className="p-4 sm:p-6 lg:p-8">
-              <div className="relative aspect-square rounded-2xl overflow-hidden">
+              <div className="relative aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden">
                 <img
                   src={`http://localhost:5000${product?.image}`}
                   alt={product?.name}
@@ -257,7 +257,7 @@ const CandleDetailsPage: React.FC = () => {
                 )}
               </div>
               {/* Thumbnails placeholder */}
-              <div className="mt-4 grid grid-cols-5 gap-4">
+              <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className={`aspect-square rounded-lg ${i === 0 ? 'ring-2 ring-pink-500' : ''} overflow-hidden`}>
                      <img
@@ -271,10 +271,10 @@ const CandleDetailsPage: React.FC = () => {
             </div>
 
             {/* Product Details */}
-            <div className="p-6 sm:p-8 lg:p-12 flex flex-col justify-between">
+            <div className="p-4 sm:p-6 lg:p-12 flex flex-col justify-between">
               <div>
                 <p className="text-sm font-medium text-pink-600 uppercase tracking-wider">{product?.category}</p>
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">{product?.name}</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">{product?.name}</h1>
 
                 <div className="flex items-center mb-6">
                   <div className="flex items-center">
@@ -389,30 +389,30 @@ const CandleDetailsPage: React.FC = () => {
         <img
           src={`http://localhost:5000${review.userId?.image ? review.userId.image : '/default-profile.png'}`}
           alt={review.name}
-          className="w-16 h-16 object-cover rounded-full"
+          className="w-12 h-12 object-cover rounded-full"
         />
       </div>
       <div className="flex-1">
-        <p className="font-semibold text-gray-900">{review.name}</p>
-        <p className="text-gray-700 mt-1">{review.text}</p>
+        <p className="font-semibold text-gray-900 text-xs">{review.name}</p>
+        <p className="text-gray-700 mt-1 text-xs">{review.text}</p>
         <div className="mt-1 flex">
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              className={`h-5 w-5 ${
+              className={`h-4 w-4 ${
                 i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
               }`}
             />
           ))}
         </div>
       </div>
-      <div className="mr-4 relative flex space-x-2">
+      <div className="mr-4 relative flex space-x-2 overflow-x-auto max-w-full">
         {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
           <img
             key={idx}
             src={`http://localhost:5000${imgSrc ? imgSrc : '/default-profile.png'}`}
             alt={`${review.name} image ${idx + 1}`}
-            className="w-20 h-20 object-cover rounded-lg cursor-pointer"
+            className="w-20 h-20 object-cover rounded-lg cursor-pointer flex-shrink-0"
             onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
             style={{ transition: 'transform 0.3s ease' }}
           />
