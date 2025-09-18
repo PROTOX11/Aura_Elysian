@@ -12,7 +12,7 @@ interface Product {
   name: string;
   price: number;
   originalPrice?: number;
-  image: string;
+  primaryImage: string;
   category: string;
   rating: number;
   reviews: number;
@@ -61,11 +61,15 @@ export const ProductsPage: React.FC = () => {
           setPriceRange([0, maxProductPrice]);
         }
 
-        setAllProducts(products.map((p: any) => ({
-          ...p,
-          id: p._id,
-          image: p.image.startsWith('http') ? p.image : `http://localhost:5000${p.image}`
-        })));
+        setAllProducts(products.map((p: any) => {
+          const primaryImageUrl = p.primaryImage && p.primaryImage.startsWith('http') ? p.primaryImage : `http://localhost:5000${p.primaryImage}`;
+          console.log(`Product ${p._id} primaryImage URL:`, primaryImageUrl);
+          return {
+            ...p,
+            id: p._id,
+            primaryImage: primaryImageUrl,
+          };
+        }));
       } catch (error) {
         console.error("Error fetching products:", error);
       }

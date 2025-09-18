@@ -9,7 +9,8 @@ interface Product {
   name: string;
   price: number;
   originalPrice?: number;
-  image: string;
+  images: string[];
+  primaryImage: string;
   category: string;
   rating: number;
   reviews: number;
@@ -191,7 +192,7 @@ const CandleDetailsPage: React.FC = () => {
             <div className="p-4 sm:p-6 lg:p-8">
               <div className="relative aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden">
                 <img
-                  src={`http://localhost:5000${product?.image}`}
+                  src={`http://localhost:5000${product?.primaryImage}`}
                   alt={product?.name}
                   className="w-full h-full object-cover"
                 />
@@ -201,12 +202,12 @@ const CandleDetailsPage: React.FC = () => {
                   </div>
                 )}
               </div>
-              {/* Thumbnails placeholder */}
+              {/* Thumbnails */}
               <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`aspect-square rounded-lg ${i === 0 ? 'ring-2 ring-pink-500' : ''} overflow-hidden`}>
+                {product?.images?.map((img, i) => (
+                  <div key={i} className={`aspect-square rounded-lg ${img === product.primaryImage ? 'ring-2 ring-pink-500' : ''} overflow-hidden`}>
                     <img
-                      src={`http://localhost:5000${product?.image}`}
+                      src={`http://localhost:5000${img}`}
                       alt={`${product?.name} thumbnail ${i + 1}`}
                       className="w-full h-full object-cover"
                     />

@@ -8,7 +8,7 @@ interface Product {
   name: string;
   price: number;
   originalPrice?: number;
-  image: string;
+  primaryImage: string;
   category: string;
   rating: number;
   reviews: number;
@@ -92,7 +92,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Product Image */}
         <div className="relative aspect-square overflow-hidden">
             <img
-              src={product.image}
+              src={product.primaryImage}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />

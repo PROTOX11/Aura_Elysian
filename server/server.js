@@ -72,7 +72,8 @@ const productSchema = new mongoose.Schema({
     name: String,
     price: Number,
     originalPrice: Number,
-    image: String,
+    images: [String],
+    primaryImage: String,
     category: String,
     rating: Number,
     reviews: Number,
@@ -153,12 +154,17 @@ app.get('/api/products/:id/reviews', async (req, res) => {
   }
 });
 
-app.post('/api/products', auth, upload.single('image'), async (req, res) => {
+app.post('/api/products', auth, upload.array('images', 5), async (req, res) => {
     console.log('Received authenticated request to add product:', req.body);
     try {
+        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+        const primaryIndex = parseInt(req.body.primaryIndex) || 0;
+        const primaryImage = imagePaths[primaryIndex] || '';
+
         const productData = {
             ...req.body,
-            image: req.file ? `/uploads/${req.file.filename}` : '',
+            images: imagePaths,
+            primaryImage: primaryImage,
             uploadedBy: req.user.id,
             festival: req.body.festival ? JSON.parse(req.body.festival) : [],
         };
@@ -225,12 +231,12 @@ app.put('/api/cart', auth, async (req, res) => {
             
             const newCart = await Cart.create({
                 userId,
-                products: [{ 
-                    productId, 
+                products: [{
+                    productId,
                     name: product.name,
                     price: product.price,
-                    image: product.image,
-                    quantity 
+                    primaryImage: product.primaryImage,
+                    quantity
                 }],
             });
             return res.status(201).json(newCart);
@@ -251,12 +257,12 @@ app.put('/api/cart', auth, async (req, res) => {
                 const product = await Product.findById(productId);
                 if (!product) return res.status(404).json({ message: 'Product not found' });
 
-                cart.products.push({ 
-                    productId, 
+                cart.products.push({
+                    productId,
                     name: product.name,
                     price: product.price,
-                    image: product.image,
-                    quantity 
+                    primaryImage: product.primaryImage,
+                    quantity
                 });
             }
             // If itemIndex is -1 and quantity is 0, do nothing
