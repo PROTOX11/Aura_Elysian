@@ -13,7 +13,6 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { href: '/', label: 'Home' },
-    { href: '/products', label: 'All Products' },
     { href: '/candles', label: 'Candles' },
     { href: '/custom', label: 'Custom' },
   ];
@@ -35,7 +34,7 @@ export const Navbar: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Search for candles, custom pieces..."
+                placeholder="Search..."
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all duration-200"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -119,7 +118,7 @@ export const Navbar: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search..."
                   className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

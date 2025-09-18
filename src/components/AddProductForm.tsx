@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, UploadCloud, DollarSign } from 'lucide-react';
 import axios from 'axios';
 
-type ProductType = 'Candle' ;
+type ProductType = 'Candle';
 type ContainerType = 'Glass' | 'No Glass';
 
 interface FormData {
@@ -77,11 +77,11 @@ export const AddProductForm: React.FC = () => {
 
   const setProductType = (type: ProductType) => {
     setFormData(prev => ({ ...prev, productType: type }));
-  }
+  };
 
   const setContainer = (container: ContainerType) => {
     setFormData(prev => ({ ...prev, container }));
-  }
+  };
 
   const toggleFestival = (festival: string) => {
     setFormData(prev => {
@@ -167,7 +167,7 @@ export const AddProductForm: React.FC = () => {
     <div className="p-8">
       <h2 className="text-2xl font-bold mb-2">Add a New Product</h2>
       <p className="text-gray-500 mb-6">Step {step} of 3</p>
-      <div className="relative h-[450px]">
+      <div className="relative h-[450px] overflow-y-auto">
         <AnimatePresence mode="wait">
           {renderStep()}
         </AnimatePresence>
@@ -195,7 +195,6 @@ const Step1 = ({ nextStep, formData, setFormData, setProductType, handleChange, 
       transition={{ duration: 0.3 }}
       className="space-y-6 absolute w-full"
     >
-
       <div>
         <label className="font-medium text-gray-800">Product Images (1-5)</label>
         <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
@@ -376,7 +375,6 @@ const Step3 = ({ prevStep, formData, handleSubmit, handleChange }: Step3Props) =
           />
         </div>
       </div>
-
 
       <div className="flex justify-between pt-4">
         <button type="button" onClick={prevStep} className="inline-flex items-center gap-2 text-gray-600 px-6 py-2 rounded-full font-semibold hover:bg-gray-100">

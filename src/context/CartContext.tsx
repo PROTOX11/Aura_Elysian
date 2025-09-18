@@ -5,7 +5,7 @@ interface CartItem {
   productId: string;
   name: string;
   price: number;
-  image: string;
+  primaryImage: string;
   quantity: number;
 }
 
@@ -35,7 +35,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchCart = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
     if (!token) {
       setLoading(false);
       return;
@@ -44,11 +44,20 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/cart', {
         headers: { Authorization: `Bearer ${token}` },
+        validateStatus: () => true, // Don't throw for any status
       });
-      const cartItems = response.data.products || [];
-      setCart(cartItems);
-    } catch (error) {
-      console.error('Error fetching cart:', error);
+      if (response.status === 200) {
+        const cartItems = response.data.products || [];
+        setCart(cartItems);
+      } else if (response.status === 401) {
+        // Token invalid or expired, clear cart silently
+        setCart([]);
+      } else {
+        console.error('Error fetching cart:', response.status);
+        setCart([]);
+      }
+    } catch (error: any) {
+      console.error('Network error fetching cart:', error);
       setCart([]);
     } finally {
       setLoading(false);
@@ -60,7 +69,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }, []);
 
   const updateCartItemQuantity = async (productId: string, quantity: number) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
     if (!token) return;
 
     try {
@@ -78,20 +87,32 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         } else if (quantity > 0) {
           // Add new item to cart optimistically
           // Since we don't have full product info here, add with minimal info
-          return [...prevCart, { productId, name: '', price: 0, image: '', quantity }];
+          return [...prevCart, { productId, name: '', price: 0, primaryImage: '', quantity }];
         }
         return prevCart;
       });
       
-      await axios.put(
+      const response = await axios.put(
         'http://localhost:5000/api/cart',
         { productId, quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: () => true,
+        }
       );
-      // Refetch to ensure consistency, or rely on optimistic update
-      fetchCart();
-    } catch (error) {
-      console.error('Error updating cart:', error);
+      if (response.status === 200) {
+        // Refetch to ensure consistency, or rely on optimistic update
+        fetchCart();
+      } else if (response.status === 401) {
+        // Token invalid, revert silently
+        fetchCart();
+      } else {
+        console.error('Error updating cart:', response.status);
+        // Revert optimistic update on error if needed
+        fetchCart();
+      }
+    } catch (error: any) {
+      console.error('Network error updating cart:', error);
       // Revert optimistic update on error if needed
       fetchCart();
     }
