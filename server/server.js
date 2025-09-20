@@ -311,6 +311,21 @@ app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => 
     }
 });
 
+app.delete('/api/testimonials/:id', auth, async (req, res) => {
+    try {
+        const testimonial = await Testimonial.findById(req.params.id);
+        if (!testimonial) {
+            return res.status(404).json({ message: 'Testimonial not found' });
+        }
+
+        await Testimonial.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Testimonial deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting testimonial:', error);
+        res.status(500).json({ message: 'Failed to delete testimonial' });
+    }
+});
+
 app.post('/api/productreviews', auth, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'images', maxCount: 3 }]), async (req, res) => {
     console.log('Received authenticated request to add product review:', req.body);
     try {
