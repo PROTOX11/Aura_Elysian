@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, Star, Plus, Minus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,11 +31,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   quantity,
 }) => {
   const [currentQuantity, setCurrentQuantity] = useState(quantity);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState('');
+  const [isInView, setIsInView] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     setCurrentQuantity(quantity);
   }, [quantity]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          setImageSrc(`http://localhost:5000${product.primaryImage}`);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [product.primaryImage]);
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -90,12 +113,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </motion.button>
 
         {/* Product Image */}
-        <div className="relative aspect-square overflow-hidden">
-            <img
-              src={product.primaryImage}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
+        <div className="relative aspect-square overflow-hidden bg-gray-100">
+          {!isInView ? (
+            <div ref={imgRef} className="w-full h-full flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <>
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <div className="w-8 h-8 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div>
+                </div>
+              )}
+              <img
+                src={imageSrc}
+                alt={product.name}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageLoaded(true)}
+                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </>
+          )}
         </div>
 
         {/* Product Info */}
@@ -140,7 +180,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
               {product.originalPrice && (
                 <span className="text-sm text-gray-500 line-through">
-                  ${product.originalPrice}
+                  ₹{product.originalPrice}
                 </span>
               )}
             </div>

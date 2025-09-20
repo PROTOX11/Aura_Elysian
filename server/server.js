@@ -55,6 +55,8 @@ const AuraUser = mongoose.model('AuraUser', auraUserSchema);
 import User from './models/User.js';
 import CustomOrder from './models/CustomOrder.js';
 import Cart from './models/Cart.js';
+import TrendingProduct from './models/TrendingProduct.js';
+
 
 // General User Schema
 // Remove duplicate userSchema and User model definition here to avoid OverwriteModelError
@@ -284,11 +286,6 @@ app.get('/api/testimonials', async (req, res) => {
     res.json(testimonials);
 });
 
-app.get('/api/testimonials', async (req, res) => {
-    const testimonials = await Testimonial.find();
-    res.json(testimonials);
-});
-
 app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => {
     console.log('Received authenticated request to add testimonial:', req.body);
     try {
@@ -349,6 +346,94 @@ app.post('/api/productreviews', auth, upload.fields([{ name: 'image', maxCount: 
 app.get('/api/featured-collections', async (req, res) => {
     const collections = await FeaturedCollection.find();
     res.json(collections);
+});
+
+app.get('/api/trending-products', async (req, res) => {
+    try {
+        const trendingProducts = await TrendingProduct.find().populate('productId');
+        // Transform the data to include product details
+        const transformedProducts = trendingProducts.map(tp => {
+            if (tp.productId) {
+                // If productId exists, use product data
+                return {
+                    _id: tp._id,
+                    name: tp.productId.name,
+                    price: tp.productId.price,
+                    originalPrice: tp.productId.originalPrice,
+                    primaryImage: tp.productId.primaryImage,
+                    images: tp.productId.images,
+                    category: tp.productId.category,
+                    rating: tp.productId.rating,
+                    reviews: tp.productId.reviews,
+                    theme: tp.productId.theme,
+                    fragrance: tp.productId.fragrance,
+                    weight: tp.productId.weight,
+                    container: tp.productId.container,
+                    festival: tp.productId.festival,
+                    description: tp.productId.description,
+                    productId: tp.productId._id,
+                };
+            } else {
+                // If no productId, use trending product data
+                return {
+                    _id: tp._id,
+                    name: tp.name,
+                    price: tp.price,
+                    originalPrice: tp.originalPrice,
+                    primaryImage: tp.primaryImage,
+                    images: tp.images,
+                    category: tp.category,
+                    rating: tp.rating,
+                    reviews: tp.reviews,
+                    theme: tp.theme,
+                    fragrance: tp.fragrance,
+                    weight: tp.weight,
+                    container: tp.container,
+                    festival: tp.festival,
+                    description: tp.description,
+                };
+            }
+        });
+        res.json(transformedProducts);
+    } catch (error) {
+        console.error('Error fetching trending products:', error);
+        res.status(500).json({ message: 'Failed to fetch trending products' });
+    }
+});
+
+app.post('/api/trending-products', auth, upload.array('images', 5), async (req, res) => {
+    console.log('Received authenticated request to add trending product:', req.body);
+    try {
+        const trendingProductData = {
+            productId: req.body.productId,
+            uploadedBy: req.user.id,
+        };
+        const trendingProduct = new TrendingProduct(trendingProductData);
+        const savedProduct = await trendingProduct.save();
+        console.log('Trending product saved successfully:', savedProduct);
+        res.status(201).json({ id: savedProduct._id });
+    } catch (error) {
+        console.error('Error saving trending product:', error.stack || error);
+        res.status(500).json({ message: 'Failed to save trending product' });
+    }
+});
+
+app.delete('/api/trending-products/:id', auth, async (req, res) => {
+    try {
+        const trendingProduct = await TrendingProduct.findById(req.params.id);
+        if (!trendingProduct) {
+            return res.status(404).json({ message: 'Trending product not found' });
+        }
+        // Check if user is the one who uploaded it or is an admin
+        if (trendingProduct.uploadedBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to delete this trending product' });
+        }
+        await TrendingProduct.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Trending product removed successfully' });
+    } catch (error) {
+        console.error('Error deleting trending product:', error);
+        res.status(500).json({ message: 'Failed to delete trending product' });
+    }
 });
 
 app.post('/api/team/signup', async (req, res) => {

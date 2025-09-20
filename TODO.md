@@ -1,32 +1,54 @@
-# Custom Order Feature Implementation
+# TODO List - Aura Elysian Project
 
-## Completed Tasks
-- [x] Create CustomOrder Mongoose model with optional fields (userId, image, description, referenceLink, createdAt)
-- [x] Add backend API route POST /api/custom-orders with image upload support
-- [x] Create CustomOrderPage.tsx component with form for image upload, description, and reference link
-- [x] Update App.tsx to route /custom to CustomOrderPage instead of ProductsPage
-- [x] Ensure all fields are optional as requested
-- [x] Include promise message about lower prices than others
+## Completed Tasks ✅
 
-## Backend Changes
-- server/models/CustomOrder.js: New model for custom orders
-- server/server.js: Added import for CustomOrder and POST /api/custom-orders route
+### Backend Enhancements
+- [x] Created TrendingProduct model (server/models/TrendingProduct.js)
+- [x] Added GET /api/trending-products endpoint
+- [x] Added POST /api/trending-products endpoint with authentication and file upload
+- [x] Fixed duplicate testimonials route in server.js
 
-## Frontend Changes
-- src/pages/CustomOrderPage.tsx: New page component with form and submission logic
-- src/App.tsx: Updated route for /custom to use CustomOrderPage
+### Frontend Enhancements
+- [x] Created ManageContentPage component for team dashboard
+- [x] Added "Manage Content" tab to TeamPage
+- [x] Updated HomePage to fetch trending products instead of regular products
+- [x] Implemented lazy loading for ProductCard images with Intersection Observer
+- [x] Added loading spinner and smooth image transitions
 
-## Features Implemented
-- Image upload (optional)
-- Description textarea (optional)
-- Reference link input (optional)
-- Form submission to backend API
-- Success/error messaging
-- Responsive design with Tailwind CSS
-- Separate from candles and other product routes as requested
+### Features Implemented
+- [x] Dynamic content management for testimonials, featured collections, and trending products
+- [x] Image upload functionality for trending products
+- [x] Lazy loading optimization for product images
+- [x] Responsive UI with loading states
 
-## Testing
-- Form can be submitted with any combination of fields (all optional)
-- Image upload works via multer
-- Data saved to MongoDB CustomOrder collection
-- Page accessible at http://localhost:4000/custom
+## Pending Tasks ⏳
+
+### Content Management Forms
+- [ ] Add form to create/edit testimonials in ManageContentPage
+- [ ] Add form to create/edit featured collections in ManageContentPage
+- [ ] Add form to create/edit trending products in ManageContentPage
+- [ ] Implement delete functionality for all content types
+
+### Backend CRUD Operations
+- [ ] Add PUT endpoints for updating testimonials
+- [ ] Add PUT endpoints for updating featured collections
+- [ ] Add PUT endpoints for updating trending products
+- [ ] Add DELETE endpoints for all content types
+
+### UI/UX Improvements
+- [ ] Add pagination for content lists in ManageContentPage
+- [ ] Add search/filter functionality for content management
+- [ ] Add confirmation dialogs for delete operations
+- [ ] Improve error handling and user feedback
+
+### Testing & Optimization
+- [ ] Test all CRUD operations
+- [ ] Optimize image loading performance
+- [ ] Add proper TypeScript types for all components
+- [ ] Implement proper error boundaries
+
+## Notes
+- The team dashboard now has a 4th tab "Manage Content" for managing static data
+- Home page now displays trending products instead of regular products
+- Product images now load lazily for better performance
+- All endpoints support file uploads with authentication

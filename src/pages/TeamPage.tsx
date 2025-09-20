@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AddProductForm } from '../components/AddProductForm';
 import { AddReviewsForm } from '../components/AddReviewsForm';
+import { ManageContentPage } from './ManageContentPage';
 import { useNavigate } from 'react-router-dom';
 
 const OrderList = () => (
@@ -12,7 +13,7 @@ const OrderList = () => (
 );
 
 export const TeamPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'addProduct' | 'addReviews' | 'orderList'>('addProduct');
+    const [activeTab, setActiveTab] = useState<'addProduct' | 'addReviews' | 'orderList' | 'manageContent'>('addProduct');
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -38,7 +39,8 @@ export const TeamPage: React.FC = () => {
     const getDirection = () => {
         if (activeTab === 'addProduct') return -1;
         if (activeTab === 'addReviews') return 0;
-        return 1;
+        if (activeTab === 'orderList') return 1;
+        return 2;
     };
 
     const direction = getDirection();
@@ -94,6 +96,18 @@ export const TeamPage: React.FC = () => {
                                 />
                             )}
                         </button>
+                        <button
+                            onClick={() => setActiveTab('manageContent')}
+                            className={`w-full sm:flex-1 p-2 sm:p-3 text-center text-xs sm:text-sm font-semibold transition-colors relative ${activeTab === 'manageContent' ? 'text-pink-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                        >
+                            Manage Content
+                            {activeTab === 'manageContent' && (
+                                <motion.div
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-pink-600"
+                                    layoutId="activeTeamTab"
+                                />
+                            )}
+                        </button>
                     </div>
 
                     {/* Content */}
@@ -115,6 +129,7 @@ export const TeamPage: React.FC = () => {
                                 {activeTab === 'addProduct' && <AddProductForm />}
                                 {activeTab === 'addReviews' && <AddReviewsForm />}
                                 {activeTab === 'orderList' && <OrderList />}
+                                {activeTab === 'manageContent' && <ManageContentPage />}
                             </motion.div>
                         </AnimatePresence>
                     </div>

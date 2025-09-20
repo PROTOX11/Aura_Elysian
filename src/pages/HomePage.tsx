@@ -12,7 +12,7 @@ interface Product {
   name: string;
   price: number;
   originalPrice?: number;
-  image: string;
+  primaryImage: string;
   category: string;
   rating: number;
   reviews: number;
@@ -39,11 +39,12 @@ export const HomePage: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [featuredCollections, setFeaturedCollections] = useState<FeaturedCollection[]>([]);
+  const [productQuantities, setProductQuantities] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const productsRes = await axios.get('http://localhost:5000/api/products?limit=4');
+        const productsRes = await axios.get('http://localhost:5000/api/trending-products');
         setFeaturedProducts(productsRes.data.map((p: any) => ({ ...p, id: p._id })));
 
         const testimonialsRes = await axios.get('http://localhost:5000/api/testimonials');
@@ -58,6 +59,13 @@ export const HomePage: React.FC = () => {
 
     fetchData();
   }, []);
+
+  const handleCartUpdate = (productId: string, quantity: number) => {
+    setProductQuantities(prev => ({
+      ...prev,
+      [productId]: quantity
+    }));
+  };
 
   const fadeInUp = {
     initial: { opacity: 0, y: 60 },
@@ -165,7 +173,7 @@ export const HomePage: React.FC = () => {
               >
                 <div className="aspect-[4/3] overflow-hidden">
                   <img
-                    src={collection.image}
+                    src={`http://localhost:5000${collection.image}`}
                     alt={collection.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
@@ -230,8 +238,9 @@ export const HomePage: React.FC = () => {
               >
                 <ProductCard
                   product={product}
-                  onLike={(id) => console.log('Liked product:', id)}
-                  onAddToCart={(id) => console.log('Added to cart:', id)}
+                  onLike={(id: string) => console.log('Liked product:', id)}
+                  onCartUpdate={handleCartUpdate}
+                  quantity={productQuantities[product.id] || 0}
                 />
               </motion.div>
             ))}
@@ -279,7 +288,7 @@ export const HomePage: React.FC = () => {
 
                 <div className="flex items-center gap-4">
                   <img
-                    src={testimonial.image}
+                    src={`http://localhost:5000${testimonial.image}`}
                     alt={testimonial.name}
                     className="w-12 h-12 rounded-full object-cover"
                   />
