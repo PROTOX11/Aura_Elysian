@@ -89,6 +89,7 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
       formData.append('description', 'Featured collection');
       formData.append('link', '/products');
       formData.append('color', 'from-pink-500 to-purple-600');
+      formData.append('type', 'theme');
 
       images.forEach((image, index) => {
         formData.append('image', image);
@@ -146,6 +147,8 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-300"
           />
         </div>
+
+
 
 
 
