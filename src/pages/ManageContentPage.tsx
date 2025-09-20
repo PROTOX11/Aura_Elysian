@@ -17,6 +17,7 @@ interface FeaturedCollection {
   image: string;
   link: string;
   color: string;
+  type: string;
 }
 
 interface TrendingProduct {
@@ -46,6 +47,7 @@ export const ManageContentPage: React.FC = () => {
     image: null as File | null,
     link: '',
     color: '',
+    type: 'theme',
   });
 
   const [newTrendingProduct, setNewTrendingProduct] = useState({
@@ -90,7 +92,7 @@ export const ManageContentPage: React.FC = () => {
     }
   };
 
-  const handleCollectionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleCollectionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewCollection(prev => ({ ...prev, [name]: value }));
   };
@@ -156,6 +158,7 @@ export const ManageContentPage: React.FC = () => {
     formData.append('description', newCollection.description);
     formData.append('link', newCollection.link);
     formData.append('color', newCollection.color);
+    formData.append('type', newCollection.type);
     if (newCollection.image) {
       formData.append('image', newCollection.image);
     }
@@ -164,7 +167,7 @@ export const ManageContentPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
       alert('Collection added successfully');
-      setNewCollection({ title: '', description: '', image: null, link: '', color: '' });
+      setNewCollection({ title: '', description: '', image: null, link: '', color: '', type: 'theme' });
       fetchData();
     } catch (error) {
       console.error('Error adding collection:', error);
@@ -307,6 +310,7 @@ export const ManageContentPage: React.FC = () => {
             {collections.map((c) => (
               <div key={c._id} className="border p-4 rounded">
                 <p><strong>{c.title}</strong></p>
+                <p>Type: <span className="capitalize">{c.type}</span></p>
                 <p>{c.description}</p>
                 <p>Link: {c.link}</p>
                 <p>Color: {c.color}</p>
@@ -341,6 +345,17 @@ export const ManageContentPage: React.FC = () => {
               required
               className="w-full px-3 py-2 border rounded"
             />
+            <select
+              name="type"
+              value={newCollection.type}
+              onChange={handleCollectionChange}
+              required
+              className="w-full px-3 py-2 border rounded"
+            >
+              <option value="theme">Theme Collection</option>
+              <option value="festival">Festival Collection</option>
+              <option value="fragrance">Fragrance Collection</option>
+            </select>
             <input
               type="text"
               name="color"

@@ -117,6 +117,12 @@ const featuredCollectionSchema = new mongoose.Schema({
     image: String,
     link: String,
     color: String,
+    type: {
+        type: String,
+        enum: ['theme', 'festival', 'fragrance'],
+        required: true
+    },
+    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'AuraUser' },
 });
 const FeaturedCollection = mongoose.model('FeaturedCollection', featuredCollectionSchema);
 
@@ -346,6 +352,29 @@ app.post('/api/productreviews', auth, upload.fields([{ name: 'image', maxCount: 
 app.get('/api/featured-collections', async (req, res) => {
     const collections = await FeaturedCollection.find();
     res.json(collections);
+});
+
+app.post('/api/featured-collections', auth, upload.array('image', 4), async (req, res) => {
+    console.log('Received authenticated request to add featured collection:', req.body);
+    try {
+        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+        const primaryImage = imagePaths[0] || '';
+
+        const collectionData = {
+            ...req.body,
+            image: primaryImage,
+            uploadedBy: req.user.id,
+        };
+
+        const collection = new FeaturedCollection(collectionData);
+        const savedItem = await collection.save();
+        console.log('Featured collection saved successfully:', savedItem);
+
+        res.status(201).json({ message: 'Featured collection added successfully' });
+    } catch (error) {
+        console.error('Error saving featured collection:', error.stack || error);
+        res.status(500).json({ message: 'Failed to save featured collection' });
+    }
 });
 
 app.get('/api/trending-products', async (req, res) => {

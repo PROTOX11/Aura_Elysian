@@ -33,6 +33,7 @@ interface FeaturedCollection {
   image: string;
   link: string;
   color: string;
+  type: string;
 }
 
 export const HomePage: React.FC = () => {
@@ -160,46 +161,75 @@ export const HomePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {featuredCollections.map((collection, index) => (
-              <motion.div
-                key={collection._id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
-              >
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src={`http://localhost:5000${collection.image}`}
-                    alt={collection.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                </div>
+          {/* Group collections by type */}
+          {(() => {
+            const themeCollections = featuredCollections.filter(c => c.type === 'theme');
+            const festivalCollections = featuredCollections.filter(c => c.type === 'festival');
+            const fragranceCollections = featuredCollections.filter(c => c.type === 'fragrance');
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            const allCollections = [
+              { collections: themeCollections, title: 'Theme Collection', type: 'theme' },
+              { collections: festivalCollections, title: 'Festival Collection', type: 'festival' },
+              { collections: fragranceCollections, title: 'Fragrance Collection', type: 'fragrance' },
+            ].filter(group => group.collections.length > 0);
 
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="font-serif text-xl font-semibold mb-2">
-                    {collection.title}
+            return allCollections.map((group, groupIndex) => (
+              <div key={group.type} className="mb-16">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  viewport={{ once: true }}
+                  className="text-center mb-8"
+                >
+                  <h3 className="font-serif text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                    {group.title}
                   </h3>
-                  <p className="text-sm opacity-90 mb-4">
-                    {collection.description}
-                  </p>
+                </motion.div>
 
-                  <Link
-                    to={collection.link}
-                    className={`inline-flex items-center gap-2 bg-gradient-to-r ${collection.color} px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
-                  >
-                    Explore
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  {group.collections.slice(0, 4).map((collection, index) => (
+                    <motion.div
+                      key={collection._id}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      whileHover={{ y: -5 }}
+                      className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
+                    >
+                      <div className="aspect-square overflow-hidden">
+                        <img
+                          src={`http://localhost:5000${collection.image}`}
+                          alt={collection.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                        <h4 className="font-serif text-lg font-semibold mb-2">
+                          {collection.title}
+                        </h4>
+                        <p className="text-sm opacity-90 mb-4">
+                          {collection.description}
+                        </p>
+
+                        <Link
+                          to={collection.link}
+                          className={`inline-flex items-center gap-2 bg-gradient-to-r ${collection.color} px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
+                        >
+                          Explore
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+            ));
+          })()}
         </div>
       </section>
 
