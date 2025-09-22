@@ -272,11 +272,12 @@ export const ProductsPage: React.FC = () => {
             {/* Products Grid */}
             <motion.div
               layout
-              className={`grid gap-6 ${
+              className={`grid max-w-max mx-auto gap-6 ${
                 viewMode === 'grid'
                   ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3'
                   : 'grid-cols-1'
               }`}
+
 
             >
             {sortedProducts.length > 0 ? (

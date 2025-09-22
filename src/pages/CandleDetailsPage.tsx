@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Star, ShoppingCart, CreditCard } from 'lucide-react';
+import { Star, ShoppingCart, CreditCard, ArrowLeft } from 'lucide-react';
+
 import { useCart } from '../context/CartContext';
 
 interface Product {
@@ -55,6 +56,8 @@ const CandleDetailsPage: React.FC = () => {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [currentMainImage, setCurrentMainImage] = useState<string | null>(null);
 
+
+
   // Get current quantity of this product in cart from context
   const cartItem = cart.find(item => item.productId === id);
   const cartQuantity = cartItem ? cartItem.quantity : 0;
@@ -106,8 +109,9 @@ const CandleDetailsPage: React.FC = () => {
     });
 
     try {
-      await axios.post(`http://localhost:5000/api/productreviews`, formData, {
+      await axios.post(`/api/productreviews`, formData, {
         headers: {
+
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
         },
@@ -117,8 +121,9 @@ const CandleDetailsPage: React.FC = () => {
       setReviewImages([]);
       setRating(0);
       // Refresh reviews
-      const response = await axios.get(`http://localhost:5000/api/products/${id}/reviews`);
+      const response = await axios.get(`/api/products/${id}/reviews`);
       setReviews(response.data);
+
     } catch (error) {
       console.error('Error submitting review:', error);
       alert('Failed to submit review');
@@ -130,9 +135,10 @@ const CandleDetailsPage: React.FC = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const response = await axios.get(`/api/products/${id}`);
         setProduct(response.data);
         // Set initial main image to primaryImage
+
         setCurrentMainImage(response.data.primaryImage);
       } catch (err) {
         setError('Failed to load product');
@@ -149,9 +155,10 @@ const CandleDetailsPage: React.FC = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/products/${id}/reviews`);
+        const response = await axios.get(`/api/products/${id}/reviews`);
         setReviews(response.data);
       } catch (err) {
+
         console.error('Failed to load reviews:', err);
       }
     };
@@ -160,6 +167,9 @@ const CandleDetailsPage: React.FC = () => {
       fetchReviews();
     }
   }, [id]);
+
+
+
 
 
 
@@ -188,17 +198,28 @@ const CandleDetailsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <button
+        onClick={() => navigate('/products')}
+        className="fixed top-24 left-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg transition-transform hover:scale-110"
+      >
+
+        <ArrowLeft className="h-6 w-6" />
+      </button>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Image Gallery */}
             <div className="p-4 sm:p-6 lg:p-8">
               <div className="relative aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden">
                 <img
-                  src={`http://localhost:5000${currentMainImage || product?.primaryImage}`}
+                  src={`${currentMainImage || product?.primaryImage}`}
                   alt={product?.name}
                   className="w-full h-full object-cover"
                 />
+
                 {discount > 0 && (
                   <div className="absolute top-4 left-4 z-10 bg-pink-500 text-white text-sm font-semibold px-3 py-1.5 rounded-full">
                     {discount}% OFF
@@ -214,11 +235,12 @@ const CandleDetailsPage: React.FC = () => {
                     onClick={() => setCurrentMainImage(img)}
                   >
                     <img
-                      src={`http://localhost:5000${img}`}
+                      src={`${img}`}
                       alt={`${product?.name} thumbnail ${i + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
+
                 ))}
               </div>
             </div>
@@ -339,11 +361,12 @@ const CandleDetailsPage: React.FC = () => {
                     {/* Profile Image - 40% larger */}
                     <div className="flex justify-center mb-4">
                       <img
-                        src={`http://localhost:5000${review.userId?.image || review.image || '/default-profile.png'}`}
+                        src={`${review.userId?.image || review.image || '/default-profile.png'}`}
                         alt={review.name}
                         className="w-16 h-16 object-cover rounded-full"
                       />
                     </div>
+
 
                     {/* Name */}
                     <div className="text-center mb-2">
@@ -371,13 +394,14 @@ const CandleDetailsPage: React.FC = () => {
                     {/* Review Images */}
                     {(review.images && review.images.length > 0) || review.image ? (
                       <div className="flex justify-center">
-                        <div className="flex space-x-2 overflow-x-auto max-w-full">
+                      <div className="flex space-x-2 overflow-x-auto max-w-full">
                           {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
                             <img
                               key={idx}
-                              src={`http://localhost:5000${imgSrc ? imgSrc : '/default-profile.png'}`}
+                              src={`${imgSrc ? imgSrc : '/default-profile.png'}`}
                               alt={`${review.name} image ${idx + 1}`}
                               className="w-20 h-20 object-cover rounded-lg cursor-pointer flex-shrink-0"
+
                               onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
                               style={{ transition: 'transform 0.3s ease' }}
                             />
@@ -395,9 +419,10 @@ const CandleDetailsPage: React.FC = () => {
                     style={{ backdropFilter: 'blur(4px)' }}
                   >
                     <img
-                      src={`http://localhost:5000${zoomedImage}`}
+                      src={`${zoomedImage}`}
                       alt="Zoomed"
                       className="rounded-lg shadow-lg transition-transform duration-500 ease-in-out"
+
                       style={{ transform: 'scale(0.7)' }}
                     />
                   </div>
