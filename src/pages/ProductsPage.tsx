@@ -51,8 +51,9 @@ export const ProductsPage: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/products');
+        const res = await axios.get('/api/products');
         const products = res.data;
+
         console.log('Fetched products:', products);
 
         if (products.length > 0) {
@@ -61,15 +62,11 @@ export const ProductsPage: React.FC = () => {
           setPriceRange([0, maxProductPrice]);
         }
 
-        setAllProducts(products.map((p: any) => {
-          const primaryImageUrl = p.primaryImage && p.primaryImage.startsWith('http') ? p.primaryImage : `http://localhost:5000${p.primaryImage}`;
-          console.log(`Product ${p._id} primaryImage URL:`, primaryImageUrl);
-          return {
-            ...p,
-            id: p._id,
-            primaryImage: primaryImageUrl,
-          };
-        }));
+        setAllProducts(products.map((p: any) => ({
+          ...p,
+          id: p._id,
+        })));
+
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -277,9 +274,10 @@ export const ProductsPage: React.FC = () => {
               layout
               className={`grid gap-6 ${
                 viewMode === 'grid'
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3'
                   : 'grid-cols-1'
               }`}
+
             >
             {sortedProducts.length > 0 ? (
               sortedProducts.map((product, index) => (

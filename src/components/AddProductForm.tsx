@@ -118,7 +118,7 @@ export const AddProductForm: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/products', formDataToSend, {
+      const response = await axios.post('/api/products', formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

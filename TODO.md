@@ -1,17 +1,6 @@
-# Featured Collections Upload Fix
+# TODO
 
-## Issue
-Unable to upload featured collections from http://localhost:4000/team due to missing required `type` field
-
-## Root Cause
-- Backend schema requires `type` field with enum values: ['theme', 'festival', 'fragrance']
-- Frontend form not including `type` field in submission
-- Results in MongoDB validation error: "Path `type` is required"
-
-## Plan
-1. ✅ Add type selection dropdown to FeaturedCollectionsForm
-2. ✅ Include selected type in form submission
-3. ✅ Test the fix
-
-## Files to Edit
-- src/components/FeaturedCollectionsForm.tsx
+- [x] Modify `vite.config.ts` to add a proxy.
+- [x] Update `src/components/AddProductForm.tsx` to use a relative path for the API call.
+- [x] Modify `vite.config.ts` to add a proxy for `/uploads`.
+- [x] Update `src/pages/ProductsPage.tsx` to use relative paths for API calls and images.
