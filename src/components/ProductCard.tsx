@@ -46,7 +46,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
-          setImageSrc(`http://localhost:5000${product.primaryImage}`);
+          // Only set image source if primaryImage exists and is not empty
+          if (product.primaryImage && product.primaryImage.trim()) {
+            setImageSrc(`http://localhost:5000${product.primaryImage}`);
+          } else {
+            setImageSrc(''); // This will trigger the error handler
+          }
           observer.disconnect();
         }
       },

@@ -336,40 +336,55 @@ const CandleDetailsPage: React.FC = () => {
               <div className="space-y-6">
                 {reviews.map((review) => (
                   <div key={review._id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex mb-2 items-center">
-                      <div className="mr-4 relative">
-                        <img
-                          src={`http://localhost:5000${review.userId?.image || review.image || '/default-profile.png'}`}
-                          alt={review.name}
-                          className="w-12 h-12 object-cover rounded-full"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 text-xs">{review.name}</p>
-                        <p className="text-gray-700 mt-1 text-xs">{review.text}</p>
-                        <div className="mt-1 flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="ml-6 mr-4 relative flex space-x-2 overflow-x-auto max-w-full">
-                        {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
-                          <img
-                            key={idx}
-                            src={`http://localhost:5000${imgSrc ? imgSrc : '/default-profile.png'}`}
-                            alt={`${review.name} image ${idx + 1}`}
-                            className="w-20 h-20 object-cover rounded-lg cursor-pointer flex-shrink-0"
-                            onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
-                            style={{ transition: 'transform 0.3s ease' }}
+                    {/* Profile Image - 40% larger */}
+                    <div className="flex justify-center mb-4">
+                      <img
+                        src={`http://localhost:5000${review.userId?.image || review.image || '/default-profile.png'}`}
+                        alt={review.name}
+                        className="w-16 h-16 object-cover rounded-full"
+                      />
+                    </div>
+
+                    {/* Name */}
+                    <div className="text-center mb-2">
+                      <p className="font-semibold text-gray-900 text-sm">{review.name}</p>
+                    </div>
+
+                    {/* Rating */}
+                    <div className="text-center mb-3">
+                      <div className="flex justify-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-2.8 w-2.8 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                              }`}
                           />
                         ))}
                       </div>
                     </div>
+
+                    {/* Review Text */}
+                    <div className="mb-4">
+                      <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
+                    </div>
+
+                    {/* Review Images */}
+                    {(review.images && review.images.length > 0) || review.image ? (
+                      <div className="flex justify-center">
+                        <div className="flex space-x-2 overflow-x-auto max-w-full">
+                          {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
+                            <img
+                              key={idx}
+                              src={`http://localhost:5000${imgSrc ? imgSrc : '/default-profile.png'}`}
+                              alt={`${review.name} image ${idx + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg cursor-pointer flex-shrink-0"
+                              onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
+                              style={{ transition: 'transform 0.3s ease' }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ))}
 

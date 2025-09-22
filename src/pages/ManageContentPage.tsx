@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { Star, Upload, User, MessageSquare, Trash2 } from 'lucide-react';
+import { Star, Upload, User, MessageSquare, Trash2, Plus, X, Image as ImageIcon } from 'lucide-react';
 
 interface Testimonial {
   _id: string;
@@ -20,10 +20,21 @@ interface TrendingProduct {
   primaryImage: string;
 }
 
+interface FeaturedCollection {
+  _id: string;
+  title: string;
+  description: string;
+  image: string;
+  link: string;
+  color: string;
+  type: string;
+}
+
 export const ManageContentPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'testimonials' | 'trending'>('testimonials');
+  const [activeTab, setActiveTab] = useState<'testimonials' | 'trending' | 'featuredCollections'>('testimonials');
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([]);
+  const [featuredCollections, setFeaturedCollections] = useState<FeaturedCollection[]>([]);
 
   // Form states for adding new content
   const [newTestimonial, setNewTestimonial] = useState({
@@ -46,18 +57,31 @@ export const ManageContentPage: React.FC = () => {
     container: '',
   });
 
+  // Form states for featured collections
+  const [newCollection, setNewCollection] = useState({
+    title: '',
+    description: 'Featured collection',
+    link: '/products',
+    color: 'from-pink-500 to-purple-600',
+    type: 'theme',
+    images: [] as File[],
+  });
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
-      const [testRes, trendRes] = await Promise.all([
+      const [testRes, trendRes, collectionsRes] = await Promise.all([
         axios.get('http://localhost:5000/api/testimonials'),
         axios.get('http://localhost:5000/api/trending-products'),
+        axios.get('http://localhost:5000/api/featured-collections'),
       ]);
       setTestimonials(testRes.data);
       setTrendingProducts(trendRes.data);
+      setFeaturedCollections(collectionsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -199,15 +223,108 @@ export const ManageContentPage: React.FC = () => {
     }
   };
 
+  // Featured Collections handlers
+  const handleCollectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewCollection(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCollectionImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setNewCollection(prev => ({
+        ...prev,
+        images: [...prev.images, ...filesArray].slice(0, 4), // max 4 images
+      }));
+    }
+  };
+
+  const removeCollectionImage = (index: number) => {
+    setNewCollection(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const submitFeaturedCollection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCollection.title.trim() || newCollection.images.length === 0) {
+      alert('Please provide title and at least one image');
+      return;
+    }
+
+    setLoading(true);
+    const token = localStorage.getItem('aura-token');
+    if (!token) {
+      alert('Please login to add collection');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('title', newCollection.title);
+      formData.append('description', newCollection.description);
+      formData.append('link', newCollection.link);
+      formData.append('color', newCollection.color);
+      formData.append('type', newCollection.type);
+
+      newCollection.images.forEach((image, index) => {
+        formData.append('image', image);
+      });
+
+      await axios.post('http://localhost:5000/api/featured-collections', formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      });
+
+      alert('Collection added successfully');
+      setNewCollection({
+        title: '',
+        description: 'Featured collection',
+        link: '/products',
+        color: 'from-pink-500 to-purple-600',
+        type: 'theme',
+        images: [],
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Error adding collection:', error);
+      alert('Failed to add collection');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteFeaturedCollection = async (id: string) => {
+    const token = localStorage.getItem('aura-token');
+    if (!token) {
+      alert('Please login to delete collection');
+      return;
+    }
+    if (!confirm('Are you sure you want to delete this collection?')) {
+      return;
+    }
+    try {
+      await axios.delete(`http://localhost:5000/api/featured-collections/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Collection deleted successfully');
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      alert('Failed to delete collection');
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold mb-8 text-gray-900">Manage Content</h2>
 
-        <div className="flex space-x-1 mb-8 bg-gray-100 p-1 rounded-lg">
+        <div className="flex flex-wrap gap-1 mb-8 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => setActiveTab('testimonials')}
-            className={`px-6 py-3 rounded-md font-semibold transition-all ${
+            className={`px-4 sm:px-6 py-3 rounded-md font-semibold transition-all text-sm sm:text-base ${
               activeTab === 'testimonials'
                 ? 'bg-white text-pink-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -217,13 +334,23 @@ export const ManageContentPage: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('trending')}
-            className={`px-6 py-3 rounded-md font-semibold transition-all ${
+            className={`px-4 sm:px-6 py-3 rounded-md font-semibold transition-all text-sm sm:text-base ${
               activeTab === 'trending'
                 ? 'bg-white text-pink-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             Trending Products
+          </button>
+          <button
+            onClick={() => setActiveTab('featuredCollections')}
+            className={`px-4 sm:px-6 py-3 rounded-md font-semibold transition-all text-sm sm:text-base ${
+              activeTab === 'featuredCollections'
+                ? 'bg-white text-pink-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Featured Collections
           </button>
         </div>
 
@@ -442,6 +569,145 @@ export const ManageContentPage: React.FC = () => {
                   Add Trending Product
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'featuredCollections' && (
+          <div className="space-y-8">
+            {/* Add New Featured Collection Form */}
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
+                <ImageIcon className="h-6 w-6 text-pink-600" />
+                Add New Featured Collection
+              </h3>
+
+              <form onSubmit={submitFeaturedCollection} className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Collection Title */}
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Collection Title
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      placeholder="Enter collection title"
+                      value={newCollection.title}
+                      onChange={handleCollectionChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Images Section */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Images (Max 4)
+                  </label>
+
+                  {/* Image Preview Grid */}
+                  {newCollection.images.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {newCollection.images.map((image, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={URL.createObjectURL(image)}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeCollectionImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Image Button */}
+                  {newCollection.images.length < 4 && (
+                    <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-pink-300 transition-colors">
+                      <div className="text-center">
+                        <Plus className="mx-auto h-8 w-8 text-gray-400" />
+                        <span className="text-sm text-gray-500">Add Images</span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleCollectionImagesChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Adding...' : 'Add Collection'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Display Featured Collections */}
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
+                <ImageIcon className="h-6 w-6 text-pink-600" />
+                Featured Collections ({featuredCollections.length})
+              </h3>
+
+              {featuredCollections.length === 0 ? (
+                <div className="text-center py-12">
+                  <ImageIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">No featured collections yet</p>
+                  <p className="text-gray-400 text-sm">Add your first collection above</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {featuredCollections.map((collection) => (
+                    <motion.div
+                      key={collection._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 mb-2">{collection.title}</h4>
+                          <p className="text-gray-600 text-sm mb-2">{collection.description}</p>
+                          <p className="text-xs text-gray-500">Type: <span className="capitalize">{collection.type}</span></p>
+                          <p className="text-xs text-gray-500">Link: {collection.link}</p>
+                        </div>
+                        <button
+                          onClick={() => deleteFeaturedCollection(collection._id)}
+                          className="text-red-500 hover:text-red-700 p-1 rounded transition-colors ml-2"
+                          title="Delete collection"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {collection.image && (
+                        <img
+                          src={`http://localhost:5000${collection.image}`}
+                          alt={collection.title}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight, Sparkles, Gift, Star, ChevronRight } from 'lucide-react';
+import { ArrowRight, Sparkles, Gift, Star, ChevronRight, ChevronLeft } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 
 // Data Interfaces
@@ -66,6 +66,131 @@ export const HomePage: React.FC = () => {
       ...prev,
       [productId]: quantity
     }));
+  };
+
+  // Shuffle function to randomize array order
+  const shuffleArray = (array: any[]) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // Featured Collection Card Component with Image Carousel
+  const FeaturedCollectionCard: React.FC<{ collection: FeaturedCollection }> = ({ collection }) => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+    // Create multiple images array (using the same image for now, but ready for multiple images)
+    const images = [collection.image, collection.image, collection.image]; // Placeholder for multiple images
+
+    useEffect(() => {
+      if (!isAutoPlaying || images.length <= 1) return;
+
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }, [isAutoPlaying, images.length]);
+
+    const nextImage = () => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+      setIsAutoPlaying(false);
+    };
+
+    const prevImage = () => {
+      setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+      setIsAutoPlaying(false);
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+        whileHover={{ y: -5 }}
+        className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white"
+        onMouseEnter={() => setIsAutoPlaying(false)}
+        onMouseLeave={() => setIsAutoPlaying(true)}
+      >
+        {/* Image Container */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <motion.img
+            key={currentImageIndex}
+            src={`http://localhost:5000${images[currentImageIndex]}`}
+            alt={collection.title}
+            className="w-full h-full object-cover"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+
+          {/* Navigation Arrows */}
+          {images.length > 1 && (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={prevImage}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={nextImage}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </motion.button>
+            </>
+          )}
+
+          {/* Image Indicators */}
+          {images.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setCurrentImageIndex(index);
+                    setIsAutoPlaying(false);
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Content Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <h4 className="font-serif text-xl font-semibold mb-2">
+            {collection.title}
+          </h4>
+          <p className="text-sm opacity-90 mb-4 line-clamp-2">
+            {collection.description}
+          </p>
+
+          <Link
+            to={collection.link}
+            className={`inline-flex items-center gap-2 bg-gradient-to-r ${collection.color} px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
+          >
+            Explore
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </motion.div>
+    );
   };
 
   const fadeInUp = {
@@ -161,75 +286,12 @@ export const HomePage: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* Group collections by type */}
-          {(() => {
-            const themeCollections = featuredCollections.filter(c => c.type === 'theme');
-            const festivalCollections = featuredCollections.filter(c => c.type === 'festival');
-            const fragranceCollections = featuredCollections.filter(c => c.type === 'fragrance');
-
-            const allCollections = [
-              { collections: themeCollections, title: 'Theme Collection', type: 'theme' },
-              { collections: festivalCollections, title: 'Festival Collection', type: 'festival' },
-              { collections: fragranceCollections, title: 'Fragrance Collection', type: 'fragrance' },
-            ].filter(group => group.collections.length > 0);
-
-            return allCollections.map((group, groupIndex) => (
-              <div key={group.type} className="mb-16">
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  viewport={{ once: true }}
-                  className="text-center mb-8"
-                >
-                  <h3 className="font-serif text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                    {group.title}
-                  </h3>
-                </motion.div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                  {group.collections.slice(0, 4).map((collection, index) => (
-                    <motion.div
-                      key={collection._id}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: index * 0.1 }}
-                      viewport={{ once: true }}
-                      whileHover={{ y: -5 }}
-                      className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
-                    >
-                      <div className="aspect-square overflow-hidden">
-                        <img
-                          src={`http://localhost:5000${collection.image}`}
-                          alt={collection.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                        <h4 className="font-serif text-lg font-semibold mb-2">
-                          {collection.title}
-                        </h4>
-                        <p className="text-sm opacity-90 mb-4">
-                          {collection.description}
-                        </p>
-
-                        <Link
-                          to={collection.link}
-                          className={`inline-flex items-center gap-2 bg-gradient-to-r ${collection.color} px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
-                        >
-                          Explore
-                          <ChevronRight className="h-4 w-4" />
-                        </Link>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            ));
-          })()}
+          {/* All Collections in Single Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {shuffleArray(featuredCollections).map((collection, index) => (
+              <FeaturedCollectionCard key={collection._id} collection={collection} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -256,7 +318,7 @@ export const HomePage: React.FC = () => {
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6"
           >
             {featuredProducts.map((product, index) => (
               <motion.div
