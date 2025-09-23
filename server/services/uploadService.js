@@ -1,11 +1,58 @@
 import cloudinary from '../config/cloudinary.js';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
-// Configure multer for memory storage
-const storage = multer.memoryStorage();
+// Configure multer for memory storage (for Cloudinary uploads)
+const memoryStorage = multer.memoryStorage();
 const upload = multer({ 
-  storage: storage,
+  storage: memoryStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Check if file is an image
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+
+// Configure multer for local file storage (for different content types)
+const localStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // Determine upload directory based on the endpoint or content type
+    let subDir = 'products'; // default
+    const url = req.originalUrl || req.url;
+
+    if (url.includes('testimonials')) {
+      subDir = 'testimonials';
+    } else if (url.includes('featured-collections')) {
+      subDir = 'collections';
+    } else if (url.includes('productreviews')) {
+      subDir = 'reviews';
+    } else if (url.includes('products')) {
+      subDir = 'products';
+    }
+    const uploadPath = path.join(process.cwd(), 'server', 'uploads', subDir);
+    // Ensure directory exists
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const filename = `${uniqueSuffix}-${file.originalname}`;
+    cb(null, filename);
+  }
+});
+
+const localUpload = multer({
+  storage: localStorage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
@@ -78,10 +125,32 @@ const getOptimizedImageUrl = (publicId, options = {}) => {
   return cloudinary.url(publicId, defaultOptions);
 };
 
+// Local file upload functions
+const uploadSingleImageLocally = (file) => {
+  // This function is called after multer has already saved the file
+  // Return the local file path
+  const baseUrl = process.env.SERVER_URL || 'http://localhost:5000';
+  const relativePath = path.relative(path.join(process.cwd(), 'server'), file.path);
+  return `${baseUrl}/${relativePath.replace(/\\/g, '/')}`;
+};
+
+const uploadMultipleImagesLocally = (files) => {
+  // This function is called after multer has already saved the files
+  // Return the local file paths
+  const baseUrl = process.env.SERVER_URL || 'http://localhost:5000';
+  return files.map(file => {
+    const relativePath = path.relative(path.join(process.cwd(), 'server'), file.path);
+    return `${baseUrl}/${relativePath.replace(/\\/g, '/')}`;
+  });
+};
+
 export {
   upload,
+  localUpload,
   uploadSingleImage,
   uploadMultipleImages,
+  uploadSingleImageLocally,
+  uploadMultipleImagesLocally,
   deleteImage,
   getOptimizedImageUrl
 };

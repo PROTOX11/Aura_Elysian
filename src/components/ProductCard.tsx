@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingCart, Star, Plus, Minus } from 'lucide-react';
+import { Heart, Star, Plus, Minus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ImageWithLoading } from './ImageWithLoading';
 
 interface Product {
   id: string;
@@ -31,10 +32,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   quantity,
 }) => {
   const [currentQuantity, setCurrentQuantity] = useState(quantity);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageSrc, setImageSrc] = useState('');
   const [isInView, setIsInView] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,12 +45,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
-          // Only set image source if primaryImage exists and is not empty
-          if (product.primaryImage && product.primaryImage.trim()) {
-            setImageSrc(`http://localhost:5000${product.primaryImage}`);
-          } else {
-            setImageSrc(''); // This will trigger the error handler
-          }
           observer.disconnect();
         }
       },
@@ -63,7 +56,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
 
     return () => observer.disconnect();
-  }, [product.primaryImage]);
+  }, []);
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -124,22 +117,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <div className="w-8 h-8 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div>
             </div>
           ) : (
-            <>
-              {!imageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="w-8 h-8 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div>
-                </div>
-              )}
-              <img
-                src={imageSrc}
-                alt={product.name}
-                onLoad={() => setImageLoaded(true)}
-                onError={() => setImageLoaded(true)}
-                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
-            </>
+            <ImageWithLoading
+              src={product.primaryImage || ''}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              showSuccessPopup={false}
+              containerClassName="w-full h-full"
+            />
           )}
         </div>
 

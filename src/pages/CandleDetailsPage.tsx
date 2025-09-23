@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Star, ShoppingCart, ArrowLeft } from 'lucide-react';
 
 import { useCart } from '../context/CartContext';
+import { ImageWithLoading } from '../components/ImageWithLoading';
 
 interface Product {
   _id: string;
@@ -55,6 +56,8 @@ const CandleDetailsPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [currentMainImage, setCurrentMainImage] = useState<string | null>(null);
+  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
+  const [imageLoadStatus, setImageLoadStatus] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
 
 
 
@@ -67,6 +70,45 @@ const CandleDetailsPage: React.FC = () => {
     if (newQuantity < 0) return;
     updateCartItemQuantity(id!, newQuantity);
   };
+
+  // Image preloading function
+  const preloadImage = useCallback((src: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (preloadedImages.has(src)) {
+        resolve();
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        setPreloadedImages(prev => new Set([...prev, src]));
+        setImageLoadStatus(prev => ({ ...prev, [src]: 'loaded' }));
+        resolve();
+      };
+      img.onerror = () => {
+        setImageLoadStatus(prev => ({ ...prev, [src]: 'error' }));
+        reject(new Error(`Failed to load image: ${src}`));
+      };
+      img.src = src;
+      setImageLoadStatus(prev => ({ ...prev, [src]: 'loading' }));
+    });
+  }, [preloadedImages]);
+
+  // Preload all product images
+  const preloadProductImages = useCallback(async (images: string[]) => {
+    const preloadPromises = images.map(src =>
+      preloadImage(src).catch(error =>
+        console.warn('Failed to preload image:', error)
+      )
+    );
+    await Promise.allSettled(preloadPromises);
+  }, [preloadImage]);
+
+  // Memoized product images for performance
+  const productImages = useMemo(() => {
+    if (!product?.images) return [];
+    return product.images.filter(Boolean);
+  }, [product?.images]);
 
 
 
@@ -150,8 +192,12 @@ const CandleDetailsPage: React.FC = () => {
         const response = await axios.get(`/api/products/${id}`);
         setProduct(response.data);
         // Set initial main image to primaryImage
-
         setCurrentMainImage(response.data.primaryImage);
+
+        // Preload all product images
+        if (response.data.images && response.data.images.length > 0) {
+          preloadProductImages(response.data.images);
+        }
       } catch (error) {
         console.error('Failed to load product:', error);
         setError('Failed to load product');
@@ -163,7 +209,7 @@ const CandleDetailsPage: React.FC = () => {
     if (id) {
       fetchProduct();
     }
-  }, [id]);
+  }, [id, preloadProductImages]);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -225,12 +271,40 @@ const CandleDetailsPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Image Gallery */}
             <div className="p-4 sm:p-6 lg:p-8">
-              <div className="relative aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden">
-                <img
-                  src={`${currentMainImage || product?.primaryImage}`}
-                  alt={product?.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                {(() => {
+                  const mainImageSrc = currentMainImage || product?.primaryImage;
+                  const loadStatus = mainImageSrc ? imageLoadStatus[mainImageSrc] : 'loading';
+
+                  return (
+                    <>
+                      {loadStatus === 'loading' && (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-12 h-12 border-4 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      {loadStatus === 'error' && (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <div className="text-center">
+                            <div className="text-lg mb-2">⚠️</div>
+                            <div className="text-sm">Failed to load image</div>
+                          </div>
+                        </div>
+                      )}
+                      {loadStatus === 'loaded' && (
+                        <ImageWithLoading
+                          src={mainImageSrc}
+                          alt={product?.name}
+                          className="w-full h-full object-cover transition-opacity duration-300"
+                          showSuccessPopup={false}
+                          containerClassName="w-full h-full"
+                          priority={true}
+                          lazy={false}
+                        />
+                      )}
+                    </>
+                  );
+                })()}
 
                 {discount > 0 && (
                   <div className="absolute top-4 left-4 z-10 bg-pink-500 text-white text-sm font-semibold px-3 py-1.5 rounded-full">
@@ -240,20 +314,39 @@ const CandleDetailsPage: React.FC = () => {
               </div>
               {/* Thumbnails */}
               <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
-                {product?.images?.map((img, i) => (
-                  <div
-                    key={i}
-                    className={`aspect-square rounded-lg overflow-hidden cursor-pointer ${img === currentMainImage ? 'ring-2 ring-pink-500' : ''}`}
-                    onClick={() => setCurrentMainImage(img)}
-                  >
-                    <img
-                      src={`${img}`}
-                      alt={`${product?.name} thumbnail ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                {productImages.map((img, i) => {
+                  const loadStatus = imageLoadStatus[img];
 
-                ))}
+                  return (
+                    <div
+                      key={i}
+                      className={`aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                        img === currentMainImage ? 'ring-2 ring-pink-500' : 'hover:ring-2 hover:ring-pink-300'
+                      }`}
+                      onClick={() => setCurrentMainImage(img)}
+                    >
+                      {loadStatus === 'loading' && (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <div className="w-6 h-6 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      {loadStatus === 'error' && (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                          <div className="text-xs">Failed to load</div>
+                        </div>
+                      )}
+                      {loadStatus === 'loaded' && (
+                        <ImageWithLoading
+                          src={img}
+                          alt={`${product?.name} thumbnail ${i + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                          showSuccessPopup={false}
+                          containerClassName="w-full h-full"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -372,11 +465,15 @@ const CandleDetailsPage: React.FC = () => {
                   <div key={review._id} className="border border-gray-200 rounded-lg p-4">
                     {/* Profile Image - 40% larger */}
                     <div className="flex justify-center mb-4">
-                      <img
-                        src={`${review.userId?.image || review.image || '/default-profile.png'}`}
-                        alt={review.name}
-                        className="w-16 h-16 object-cover rounded-full"
-                      />
+                      <div className="w-16 h-16 rounded-full overflow-hidden">
+                        <ImageWithLoading
+                          src={`${review.userId?.image || review.image || '/default-profile.png'}`}
+                          alt={review.name}
+                          className="w-full h-full object-cover"
+                          showSuccessPopup={false}
+                          containerClassName="w-full h-full"
+                        />
+                      </div>
                     </div>
 
 
@@ -406,18 +503,25 @@ const CandleDetailsPage: React.FC = () => {
                     {/* Review Images */}
                     {(review.images && review.images.length > 0) || review.image ? (
                       <div className="flex justify-center">
-                      <div className="flex space-x-2 overflow-x-auto max-w-full">
-                          {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => (
-                            <img
-                              key={idx}
-                              src={`${imgSrc ? imgSrc : '/default-profile.png'}`}
-                              alt={`${review.name} image ${idx + 1}`}
-                              className="w-20 h-20 object-cover rounded-lg cursor-pointer flex-shrink-0"
-
-                              onClick={() => setZoomedImage(imgSrc || '/default-profile.png')}
-                              style={{ transition: 'transform 0.3s ease' }}
-                            />
-                          ))}
+                        <div className="flex space-x-2 overflow-x-auto max-w-full">
+                          {(review.images && review.images.length > 0 ? review.images : [review.image]).map((imgSrc, idx) => {
+                            const finalSrc = imgSrc || '/default-profile.png';
+                            return (
+                              <div
+                                key={idx}
+                                className="w-20 h-20 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 bg-gray-100"
+                                onClick={() => setZoomedImage(finalSrc)}
+                              >
+                                <ImageWithLoading
+                                  src={finalSrc}
+                                  alt={`${review.name} image ${idx + 1}`}
+                                  className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                                  showSuccessPopup={false}
+                                  containerClassName="w-full h-full"
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ) : null}
