@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
 export interface FilterOptions {
@@ -67,7 +67,7 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
     selectedCategories: [],
   });
 
-  const fetchFilterOptions = async () => {
+  const fetchFilterOptions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -96,22 +96,22 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const refreshFilters = async () => {
+  const refreshFilters = useCallback(async () => {
     await fetchFilterOptions();
-  };
+  }, [fetchFilterOptions]);
 
-  const updateFilterState = (newState: Partial<FilterState>) => {
+  const updateFilterState = useCallback((newState: Partial<FilterState>) => {
     setFilterState(prev => ({ ...prev, ...newState }));
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     // Use fallback values if filterOptions is not loaded yet
-    const defaultMinPrice = filterOptions?.priceRanges.min || 0;
-    const defaultMaxPrice = filterOptions?.priceRanges.max || 1000;
-    const defaultMinWeight = filterOptions?.weightRanges.min || 0;
-    const defaultMaxWeight = filterOptions?.weightRanges.max || 1000;
+    const defaultMinPrice = filterOptions?.priceRanges?.min || 0;
+    const defaultMaxPrice = filterOptions?.priceRanges?.max || 1000;
+    const defaultMinWeight = filterOptions?.weightRanges?.min || 0;
+    const defaultMaxWeight = filterOptions?.weightRanges?.max || 1000;
 
     setFilterState({
       selectedFestivals: [],
@@ -122,9 +122,9 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
       weightRange: [defaultMinWeight, defaultMaxWeight],
       selectedCategories: [],
     });
-  };
+  }, [filterOptions]);
 
-  const applyCollectionFilter = (collectionTitle: string) => {
+  const applyCollectionFilter = useCallback((collectionTitle: string) => {
     if (!filterOptions) return;
 
     const title = collectionTitle.toLowerCase().trim();
@@ -181,13 +181,13 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
         selectedCategories: [matchingCategory]
       }));
     }
-  };
+  }, [filterOptions]);
 
   useEffect(() => {
     fetchFilterOptions();
-  }, []);
+  }, [fetchFilterOptions]);
 
-  const value: FilterContextType = {
+  const value: FilterContextType = useMemo(() => ({
     filterOptions,
     filterState,
     loading,
@@ -196,7 +196,7 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
     refreshFilters,
     resetFilters,
     applyCollectionFilter,
-  };
+  }), [filterOptions, filterState, loading, error, updateFilterState, refreshFilters, resetFilters, applyCollectionFilter]);
 
   return (
     <FilterContext.Provider value={value}>

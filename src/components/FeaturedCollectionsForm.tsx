@@ -4,6 +4,7 @@ import { Plus, X, Trash2 } from 'lucide-react';
 
 interface FeaturedCollection {
   _id: string;
+  name?: string;
   title: string;
   description: string;
   image: string;
@@ -18,6 +19,7 @@ interface FeaturedCollectionsFormProps {
 
 export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = ({ onSuccess }) => {
   const [title, setTitle] = useState('');
+  const [name, setName] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [collections, setCollections] = useState<FeaturedCollection[]>([]);
@@ -85,13 +87,14 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
 
     try {
       const formData = new FormData();
+      if (name) formData.append('name', name);
       formData.append('title', title);
       formData.append('description', 'Featured collection');
       formData.append('link', '/products');
       formData.append('color', 'from-pink-500 to-purple-600');
       formData.append('type', 'theme');
 
-      images.forEach((image, index) => {
+      images.forEach((image) => {
         formData.append('image', image);
       });
 
@@ -101,6 +104,7 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
 
       alert('Collection added successfully');
       setTitle('');
+      setName('');
       setImages([]);
       fetchCollections();
       onSuccess?.();
@@ -136,13 +140,24 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
         <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Collection Title
+            Display Name (shown on homepage)
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter display name"
+            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-300 mb-3"
+          />
+
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Filter Keyword (used to apply filter)
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter collection title"
+            placeholder="Enter collection title (used for filtering)"
             required
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-300"
           />

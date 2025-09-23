@@ -28,6 +28,7 @@ interface Testimonial {
 
 interface FeaturedCollection {
   _id: string;
+  name?: string;
   title: string;
   description: string;
   image: string;
@@ -46,7 +47,7 @@ export const HomePage: React.FC = () => {
     const fetchData = async () => {
       try {
         const productsRes = await axios.get('http://localhost:5000/api/trending-products');
-        setFeaturedProducts(productsRes.data.map((p: any) => ({ ...p, id: p._id })));
+        setFeaturedProducts(productsRes.data.map((p: { _id: string } & Product) => ({ ...p, id: p._id })));
 
         const testimonialsRes = await axios.get('http://localhost:5000/api/testimonials');
         setTestimonials(testimonialsRes.data);
@@ -69,7 +70,7 @@ export const HomePage: React.FC = () => {
   };
 
   // Shuffle function to randomize array order
-  const shuffleArray = (array: any[]) => {
+  const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -175,11 +176,8 @@ export const HomePage: React.FC = () => {
 
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
           <h4 className="font-serif text-xl font-semibold mb-2">
-            {collection.title}
+            {collection.name || collection.title}
           </h4>
-          <p className="text-sm opacity-90 mb-4 line-clamp-2">
-            {collection.description}
-          </p>
 
           <Link
             to={`${collection.link}?collection=${encodeURIComponent(collection.title)}`}
@@ -288,7 +286,7 @@ export const HomePage: React.FC = () => {
 
           {/* All Collections in Single Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {shuffleArray(featuredCollections).map((collection, index) => (
+            {shuffleArray(featuredCollections).map((collection) => (
               <FeaturedCollectionCard key={collection._id} collection={collection} />
             ))}
           </div>

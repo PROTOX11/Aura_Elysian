@@ -112,6 +112,7 @@ const productReviewSchema = new mongoose.Schema({
 const ProductReview = mongoose.model('ProductReview', productReviewSchema);
 
 const featuredCollectionSchema = new mongoose.Schema({
+    name: String,
     title: String,
     description: String,
     image: String,

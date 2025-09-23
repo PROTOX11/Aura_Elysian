@@ -59,9 +59,9 @@ export const ProductsPage: React.FC = () => {
 
         console.log('Fetched products:', products);
 
-        setAllProducts(products.map((p) => ({
+        setAllProducts(products.map((p: Product & { _id: string }) => ({
           ...p,
-          id: (p as any)._id,
+          id: p._id,
         })) as Product[]);
 
       } catch (error) {
@@ -331,10 +331,14 @@ export const ProductsPage: React.FC = () => {
                          filterState.selectedThemes.length +
                          filterState.selectedWeights.length +
                          filterState.selectedCategories.length +
-                         (filterOptions?.priceRanges && filterState.priceRange[0] > (filterOptions.priceRanges.min || 0) ||
-                          filterState.priceRange[1] < (filterOptions?.priceRanges.max || 1000) ? 1 : 0) +
-                         (filterOptions?.weightRanges && filterState.weightRange[0] > (filterOptions.weightRanges.min || 0) ||
-                          filterState.weightRange[1] < (filterOptions?.weightRanges.max || 1000) ? 1 : 0)}
+                         ((filterOptions?.priceRanges && (
+                            filterState.priceRange[0] > (filterOptions.priceRanges?.min ?? 0) ||
+                            filterState.priceRange[1] < (filterOptions.priceRanges?.max ?? 1000)
+                          )) ? 1 : 0) +
+                         ((filterOptions?.weightRanges && (
+                            filterState.weightRange[0] > (filterOptions.weightRanges?.min ?? 0) ||
+                            filterState.weightRange[1] < (filterOptions.weightRanges?.max ?? 1000)
+                          )) ? 1 : 0)}
                       </span>
                     )}
                     {filterLoading && <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />}

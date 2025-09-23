@@ -22,6 +22,7 @@ interface TrendingProduct {
 
 interface FeaturedCollection {
   _id: string;
+  name?: string;
   title: string;
   description: string;
   image: string;
@@ -59,6 +60,7 @@ export const ManageContentPage: React.FC = () => {
 
   // Form states for featured collections
   const [newCollection, setNewCollection] = useState({
+    name: '',
     title: '',
     description: 'Featured collection',
     link: '/products',
@@ -105,20 +107,9 @@ export const ManageContentPage: React.FC = () => {
 
 
 
-  const handleTrendingProductChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewTrendingProduct(prev => ({ ...prev, [name]: value }));
-  };
+  // Removed unused handler 'handleTrendingProductChange'
 
-  const handleTrendingProductImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setNewTrendingProduct(prev => ({
-        ...prev,
-        images: [...prev.images, ...filesArray].slice(0, 5), // max 5 images
-      }));
-    }
-  };
+  // Removed unused handler 'handleTrendingProductImagesChange'
 
   // Submit handlers
   const submitTestimonial = async (e: React.FormEvent) => {
@@ -263,13 +254,16 @@ export const ManageContentPage: React.FC = () => {
 
     try {
       const formData = new FormData();
+      if (newCollection.name) {
+        formData.append('name', newCollection.name);
+      }
       formData.append('title', newCollection.title);
       formData.append('description', newCollection.description);
       formData.append('link', newCollection.link);
       formData.append('color', newCollection.color);
       formData.append('type', newCollection.type);
 
-      newCollection.images.forEach((image, index) => {
+      newCollection.images.forEach((image) => {
         formData.append('image', image);
       });
 
@@ -279,6 +273,7 @@ export const ManageContentPage: React.FC = () => {
 
       alert('Collection added successfully');
       setNewCollection({
+        name: '',
         title: '',
         description: 'Featured collection',
         link: '/products',
@@ -584,15 +579,27 @@ export const ManageContentPage: React.FC = () => {
 
               <form onSubmit={submitFeaturedCollection} className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Collection Title */}
+                  {/* Display Name */}
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Collection Title
+                      Display Name (shown on homepage)
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder="Enter display name"
+                      value={newCollection.name}
+                      onChange={handleCollectionChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent mb-4"
+                    />
+
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Filter Keyword (used to apply filter)
                     </label>
                     <input
                       type="text"
                       name="title"
-                      placeholder="Enter collection title"
+                      placeholder="Enter collection title (used for filtering)"
                       value={newCollection.title}
                       onChange={handleCollectionChange}
                       required
