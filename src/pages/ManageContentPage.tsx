@@ -72,7 +72,31 @@ export const ManageContentPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    // Check if token is valid on component mount
+    checkTokenValidity();
   }, []);
+
+  const checkTokenValidity = async () => {
+    const token = localStorage.getItem('aura-token');
+    if (!token) {
+      console.log('No token found in localStorage');
+      return;
+    }
+
+    try {
+      const response = await axios.get('http://localhost:5000/api/auth/verify', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Token is valid:', response.data);
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      if (error.response?.status === 401) {
+        console.log('Token is invalid or expired, redirecting to login');
+        localStorage.removeItem('aura-token');
+        window.location.href = '/team/login';
+      }
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -245,11 +269,30 @@ export const ManageContentPage: React.FC = () => {
     }
 
     setLoading(true);
-    const token = localStorage.getItem('aura-token');
+    const token = localStorage.getItem('aura-token') || localStorage.getItem('token');
+    console.log('Token from localStorage:', token ? 'Token exists' : 'No token found');
+    
     if (!token) {
       alert('Please login to add collection');
       setLoading(false);
       return;
+    }
+
+    // Test token validity first
+    try {
+      const testResponse = await axios.get('http://localhost:5000/api/auth/verify', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Token is valid:', testResponse.data);
+    } catch (testError: any) {
+      console.error('Token validation failed:', testError.response?.status);
+      if (testError.response?.status === 401) {
+        alert('Your session has expired. Please login again.');
+        localStorage.removeItem('aura-token');
+        localStorage.removeItem('token');
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -267,6 +310,8 @@ export const ManageContentPage: React.FC = () => {
         formData.append('image', image);
       });
 
+      console.log('Sending request with token:', token.substring(0, 20) + '...');
+      
       await axios.post('http://localhost:5000/api/featured-collections', formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
@@ -284,7 +329,13 @@ export const ManageContentPage: React.FC = () => {
       fetchData();
     } catch (error) {
       console.error('Error adding collection:', error);
-      alert('Failed to add collection');
+      if (error.response?.status === 401) {
+        alert('Authentication failed. Please login again.');
+        localStorage.removeItem('aura-token');
+        window.location.href = '/team/login';
+      } else {
+        alert('Failed to add collection');
+      }
     } finally {
       setLoading(false);
     }

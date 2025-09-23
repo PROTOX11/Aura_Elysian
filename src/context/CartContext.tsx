@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 interface CartItem {
@@ -33,25 +34,37 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   const fetchCart = async () => {
+    // Don't fetch cart for team pages
+    if (location.pathname.startsWith('/team')) {
+      setLoading(false);
+      return;
+    }
+
     const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
     if (!token) {
       setLoading(false);
       return;
     }
+    
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/cart', {
         headers: { Authorization: `Bearer ${token}` },
         validateStatus: () => true, // Don't throw for any status
       });
+      
       if (response.status === 200) {
         const cartItems = response.data.products || [];
         setCart(cartItems);
       } else if (response.status === 401) {
         // Token invalid or expired, clear cart silently
         setCart([]);
+        // Optionally clear invalid tokens
+        localStorage.removeItem('token');
+        localStorage.removeItem('aura-token');
       } else {
         console.error('Error fetching cart:', response.status);
         setCart([]);
@@ -66,7 +79,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [location.pathname]);
 
   const updateCartItemQuantity = async (productId: string, quantity: number) => {
     const token = localStorage.getItem('token') || localStorage.getItem('aura-token');

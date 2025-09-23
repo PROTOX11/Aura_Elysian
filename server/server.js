@@ -115,7 +115,8 @@ const featuredCollectionSchema = new mongoose.Schema({
     name: String,
     title: String,
     description: String,
-    image: String,
+    image: String, // Keep for backward compatibility
+    images: [String], // Array of image paths
     link: String,
     color: String,
     type: {
@@ -463,17 +464,31 @@ app.get('/api/featured-collections', async (req, res) => {
     res.json(collections);
 });
 
+// Debug endpoint to check token validity
+app.get('/api/auth/verify', auth, (req, res) => {
+    res.json({ 
+        message: 'Token is valid', 
+        user: { id: req.user.id, email: req.user.email } 
+    });
+});
+
 app.post('/api/featured-collections', auth, upload.array('image', 4), async (req, res) => {
     console.log('Received authenticated request to add featured collection:', req.body);
+    console.log('User from auth middleware:', req.user);
+    console.log('Files received:', req.files ? req.files.length : 0);
+    
     try {
         const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
         const primaryImage = imagePaths[0] || '';
 
         const collectionData = {
             ...req.body,
-            image: primaryImage,
+            image: primaryImage, // Keep for backward compatibility
+            images: imagePaths, // Store all images
             uploadedBy: req.user.id,
         };
+
+        console.log('Collection data to save:', collectionData);
 
         const collection = new FeaturedCollection(collectionData);
         const savedItem = await collection.save();

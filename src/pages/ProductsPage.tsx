@@ -133,7 +133,7 @@ export const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }} className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <motion.div
@@ -301,6 +301,17 @@ export const ProductsPage: React.FC = () => {
             </div>
           </motion.div>
 
+          {/* Backdrop to close filters when clicking outside */}
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFilters(false)}
+              className="fixed inset-0 bg-black/30 z-40"
+            />
+          )}
+
           {/* Main Content */}
           <div className="flex-1">
             {/* Toolbar */}
@@ -310,80 +321,78 @@ export const ProductsPage: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-white rounded-2xl p-4 shadow-sm mb-6"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
+                    showFilters
+                      ? 'bg-pink-100 text-pink-700'
+                      : hasActiveFilters
+                      ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-50'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="bg-pink-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                      {filterState.selectedFestivals.length +
+                       filterState.selectedFragrances.length +
+                       filterState.selectedThemes.length +
+                       filterState.selectedWeights.length +
+                       filterState.selectedCategories.length +
+                       ((filterOptions?.priceRanges && (
+                          filterState.priceRange[0] > (filterOptions.priceRanges?.min ?? 0) ||
+                          filterState.priceRange[1] < (filterOptions.priceRanges?.max ?? 1000)
+                        )) ? 1 : 0) +
+                       ((filterOptions?.weightRanges && (
+                          filterState.weightRange[0] > (filterOptions.weightRanges?.min ?? 0) ||
+                          filterState.weightRange[1] < (filterOptions.weightRanges?.max ?? 1000)
+                        )) ? 1 : 0)}
+                    </span>
+                  )}
+                  {filterLoading && <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />}
+                </button>
+
+                <span className="text-sm text-gray-600 whitespace-nowrap">
+                  {sortedProducts.length} products
+                </span>
+
+                <div className="flex-1" />
+
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
-                      showFilters
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-lg transition-colors duration-200 ${
+                      viewMode === 'grid'
                         ? 'bg-pink-100 text-pink-700'
-                        : hasActiveFilters
-                        ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-50'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
-                    <SlidersHorizontal className="h-4 w-4" />
-                    Filters
-                    {hasActiveFilters && (
-                      <span className="bg-pink-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                        {filterState.selectedFestivals.length +
-                         filterState.selectedFragrances.length +
-                         filterState.selectedThemes.length +
-                         filterState.selectedWeights.length +
-                         filterState.selectedCategories.length +
-                         ((filterOptions?.priceRanges && (
-                            filterState.priceRange[0] > (filterOptions.priceRanges?.min ?? 0) ||
-                            filterState.priceRange[1] < (filterOptions.priceRanges?.max ?? 1000)
-                          )) ? 1 : 0) +
-                         ((filterOptions?.weightRanges && (
-                            filterState.weightRange[0] > (filterOptions.weightRanges?.min ?? 0) ||
-                            filterState.weightRange[1] < (filterOptions.weightRanges?.max ?? 1000)
-                          )) ? 1 : 0)}
-                      </span>
-                    )}
-                    {filterLoading && <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />}
+                    <Grid className="h-4 w-4" />
                   </button>
-
-                  <span className="text-sm text-gray-600">
-                    {sortedProducts.length} products
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent"
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-lg transition-colors duration-200 ${
+                      viewMode === 'list'
+                        ? 'bg-pink-100 text-pink-700'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
                   >
-                    {sortOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded-lg transition-colors duration-200 ${
-                        viewMode === 'grid'
-                          ? 'bg-pink-100 text-pink-700'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      <Grid className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 rounded-lg transition-colors duration-200 ${
-                        viewMode === 'list'
-                          ? 'bg-pink-100 text-pink-700'
-                          : 'text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      <List className="h-4 w-4" />
-                    </button>
-                  </div>
+                    <List className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -430,6 +439,6 @@ export const ProductsPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
