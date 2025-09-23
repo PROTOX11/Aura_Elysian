@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import axios from "axios";
 

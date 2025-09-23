@@ -112,25 +112,25 @@ export const LegalPage: React.FC = () => {
                 </p>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Return Eligibility</h3>
                 <ul className="list-disc list-inside text-gray-600 mb-4">
-                  <li>Items must be returned within 30 days of delivery</li>
-                  <li>Products must be in original, unused condition</li>
-                  <li>Original packaging and labels must be intact</li>
+                  <li>There is no return policy</li>
+                  {/* <li>Products must be in original, unused condition</li> */}
+                  {/* <li>Original packaging and labels must be intact</li> */}
                   <li>Custom orders and personalized items are non-returnable</li>
                 </ul>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Return Process</h3>
+                {/* <h3 className="text-lg font-semibold text-gray-900 mb-2">Return Process</h3>
                 <p className="text-gray-600 leading-relaxed mb-4">
-                  To initiate a return, please contact our customer service team with your order number and reason for return. We'll provide you with a return authorization number and shipping instructions.
+                  To initiate a return, please contact our customer service team with your order number and reason for return. We'll provide you with a return authorization if possible.
                 </p>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Return Shipping</h3>
                 <p className="text-gray-600 leading-relaxed">
                   Customers are responsible for return shipping costs unless the return is due to our error or a defective product. We recommend using a trackable shipping method for your protection.
-                </p>
+                </p> */}
               </div>
             </section>
 
             {/* Refund Process */}
             <section>
-              <h2 className="font-serif text-2xl font-bold text-gray-900 mb-4">
+              {/* <h2 className="font-serif text-2xl font-bold text-gray-900 mb-4">
                 Refund Process
               </h2>
               <div className="prose prose-gray max-w-none">
@@ -154,7 +154,7 @@ export const LegalPage: React.FC = () => {
                   <li>Items returned after 30 days</li>
                   <li>Used or damaged products</li>
                 </ul>
-              </div>
+              </div> */}
             </section>
 
             {/* Contact Information */}
@@ -168,8 +168,8 @@ export const LegalPage: React.FC = () => {
                 </p>
                 <ul className="list-none text-gray-600">
                   <li>Email: info@auraelysian.com</li>
-                  <li>Phone: +1 (234) 567-8900</li>
-                  <li>Address: 123 Candle Lane, Serenity City, SC 12345</li>
+                  <li>Phone: +91 9934202241</li>
+                  <li>Address: Om vihar phase 1, Uttam nagar west, New Delhi</li>
                 </ul>
               </div>
             </section>

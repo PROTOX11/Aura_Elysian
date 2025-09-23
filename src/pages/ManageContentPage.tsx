@@ -99,9 +99,9 @@ export const ManageContentPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Token is valid:", response.data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Token validation failed:", error);
-      if (error.response?.status === 401) {
+      if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'status' in error.response && error.response.status === 401) {
         console.log("Token is invalid or expired, redirecting to login");
         localStorage.removeItem("aura-token");
         window.location.href = "/team/login";
@@ -307,9 +307,9 @@ export const ManageContentPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Token is valid:", testResponse.data);
-    } catch (testError: any) {
-      console.error("Token validation failed:", testError.response?.status);
-      if (testError.response?.status === 401) {
+    } catch (testError: unknown) {
+      console.error("Token validation failed:", testError);
+      if (testError && typeof testError === 'object' && 'response' in testError && testError.response && typeof testError.response === 'object' && 'status' in testError.response && testError.response.status === 401) {
         alert("Your session has expired. Please login again.");
         localStorage.removeItem("aura-token");
         localStorage.removeItem("token");
@@ -356,9 +356,9 @@ export const ManageContentPage: React.FC = () => {
         images: [],
       });
       fetchData();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error adding collection:", error);
-      if (error.response?.status === 401) {
+      if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'status' in error.response && error.response.status === 401) {
         alert("Authentication failed. Please login again.");
         localStorage.removeItem("aura-token");
         window.location.href = "/team/login";
@@ -444,7 +444,7 @@ export const ManageContentPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Profile Picture */}
                   <div className="lg:col-span-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <label className="flex text-sm font-semibold text-gray-700 mb-3 items-center gap-2">
                       <User className="h-4 w-4" />
                       Profile Picture
                     </label>

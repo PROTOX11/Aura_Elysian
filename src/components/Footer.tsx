@@ -1,27 +1,47 @@
 import React, { useState, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Instagram, Youtube, Heart, Star } from 'lucide-react';
+import { Mail, Phone, MapPin, Instagram, Youtube, Heart, Star, CheckCircle, AlertCircle } from 'lucide-react';
 import { Logo } from './Logo';
+import { brevoService, BrevoSubscriptionResponse } from '../services/brevoService';
 
 const Footer: React.FC = memo(() => {
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' });
 
   const handleSubscribe = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
     setIsSubmitting(true);
+    setSubscriptionStatus({ type: null, message: '' });
+
     try {
-      // Handle subscription logic here
-      console.log('Subscribed with email:', email);
-      setEmail('');
-      // You could add a success toast here
+      const result: BrevoSubscriptionResponse = await brevoService.subscribeEmail(email.trim());
+      
+      if (result.success) {
+        setSubscriptionStatus({ type: 'success', message: result.message });
+        setEmail(''); // Clear the input on success
+      } else {
+        setSubscriptionStatus({ type: 'error', message: result.message });
+      }
     } catch (error) {
       console.error('Subscription error:', error);
+      setSubscriptionStatus({ 
+        type: 'error', 
+        message: 'An unexpected error occurred. Please try again later.' 
+      });
     } finally {
       setIsSubmitting(false);
+      
+      // Auto-hide the status message after 5 seconds
+      setTimeout(() => {
+        setSubscriptionStatus({ type: null, message: '' });
+      }, 5000);
     }
   }, [email]);
 
@@ -99,8 +119,8 @@ const Footer: React.FC = memo(() => {
               {/* Social Media Icons */}
               <div className="flex gap-2 mb-3">
                 {[
-                  { href: 'https://instagram.com/auraelysian', icon: Instagram, label: 'Instagram' },
-                  { href: 'https://youtube.com/auraelysian', icon: Youtube, label: 'YouTube' }
+                  { href: 'https://www.instagram.com/auraelysian_1/?hl=en', icon: Instagram, label: 'Instagram' },
+                  { href: 'https://www.youtube.com/channel/UC55z6Gz-o0lqTsX2QVQEdTA', icon: Youtube, label: 'YouTube' }
                 ].map(({ href, icon: Icon, label }) => (
                   <motion.a
                     key={label}
@@ -136,7 +156,7 @@ const Footer: React.FC = memo(() => {
                   <div className="p-1.5 bg-pink-50 rounded group-hover:bg-pink-100 transition-colors">
                     <Phone className="h-3 w-3" />
                   </div>
-                  <span className="text-xs">+1 (234) 567-890</span>
+                  <span className="text-xs">+91 9934202241</span>
                 </motion.a>
                 <motion.a
                   href="#"
@@ -146,7 +166,7 @@ const Footer: React.FC = memo(() => {
                   <div className="p-1.5 bg-pink-50 rounded group-hover:bg-pink-100 transition-colors">
                     <MapPin className="h-3 w-3" />
                   </div>
-                  <span className="text-xs">123 Candle Street, Craft City</span>
+                  <span className="text-xs">Om vihar phase 1, Uttam nagar west, New Delhi</span>
                 </motion.a>
               </div>
             </div>

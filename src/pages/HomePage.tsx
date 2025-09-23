@@ -535,6 +535,9 @@ export const HomePage: React.FC = () => {
                   <p className="text-gray-700 leading-relaxed text-base flex-1">
                     {testimonial.text}
                   </p>
+                  <div className="flex items-center justify-center w-8 h-8 bg-pink-200 rounded-full flex-shrink-0 group-hover:bg-pink-300 transition-colors">
+                    <span className="text-lg text-pink-600">"</span>
+                  </div>
                 </div>
 
                 {/* Rating Stars */}

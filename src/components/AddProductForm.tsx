@@ -228,7 +228,6 @@ const Step1 = ({
   nextStep,
   formData,
   setFormData,
-  setProductType,
   handleChange,
   handleFileChange,
 }: Step1Props) => {
