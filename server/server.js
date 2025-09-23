@@ -139,6 +139,73 @@ app.get('/api/products', async (req, res) => {
     res.json(products);
 });
 
+// Dynamic Filter Options API
+app.get('/api/filters', async (req, res) => {
+    try {
+        const products = await Product.find({}, 'fragrance festival theme weight price category');
+
+        // Extract unique values for each filter
+        const filters = {
+            fragrances: [...new Set(products
+                .map(p => p.fragrance)
+                .filter(Boolean)
+                .map(f => f.trim())
+                .filter(f => f.length > 0)
+            )].sort(),
+
+            festivals: [...new Set(products
+                .flatMap(p => p.festival || [])
+                .filter(Boolean)
+                .map(f => f.trim())
+                .filter(f => f.length > 0)
+            )].sort(),
+
+            themes: [...new Set(products
+                .map(p => p.theme)
+                .filter(Boolean)
+                .map(t => t.trim())
+                .filter(t => t.length > 0)
+            )].sort(),
+
+            weights: [...new Set(products
+                .map(p => p.weight)
+                .filter(Boolean)
+                .map(w => w.trim())
+                .filter(w => w.length > 0)
+            )].sort(),
+
+            priceRanges: {
+                min: products.length > 0 ? Math.min(...products.map(p => p.price || 0)) : 0,
+                max: products.length > 0 ? Math.max(...products.map(p => p.price || 0)) : 1000
+            },
+
+            categories: [...new Set(products
+                .map(p => p.category)
+                .filter(Boolean)
+                .map(c => c.trim())
+                .filter(c => c.length > 0)
+            )].sort()
+        };
+
+        res.json(filters);
+    } catch (error) {
+        console.error('Error fetching filter options:', error);
+        res.status(500).json({ message: 'Failed to fetch filter options' });
+    }
+});
+
+// Filter refresh endpoint (for cache invalidation)
+app.post('/api/filters/refresh', auth, async (req, res) => {
+    try {
+        // This endpoint can be used to trigger filter refresh
+        // In a production environment, you might want to implement caching here
+        res.json({ message: 'Filter cache refreshed successfully' });
+    } catch (error) {
+        console.error('Error refreshing filters:', error);
+        res.status(500).json({ message: 'Failed to refresh filters' });
+    }
+});
+
 app.get('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);

@@ -14,32 +14,37 @@ import { CartPage } from './pages/CartPage';
 import CandleDetailsPage from './pages/CandleDetailsPage';
 import CustomOrderPage from './pages/CustomOrderPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import { CartProvider } from './context/CartContext';
+import { FilterProvider } from './context/FilterContext';
 
 function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/candles" element={<ProductsPage />} />
-          <Route path="/candles/:id" element={<CandleDetailsPage />} />
-          <Route path="/custom" element={<CustomOrderPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/team/signup" element={<TeamSignupPage />} />
-          <Route path="/team/login" element={<TeamLoginPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/liked" element={<LikedProductsPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/team" element={<TeamPage />} />
-          </Route>
-        </Routes>
-
-      </div>
+      <FilterProvider>
+        <CartProvider>
+          <div className="min-h-screen bg-white">
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/candles" element={<ProductsPage />} />
+              <Route path="/candles/:id" element={<CandleDetailsPage />} />
+              <Route path="/custom" element={<CustomOrderPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/team/signup" element={<TeamSignupPage />} />
+              <Route path="/team/login" element={<TeamLoginPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/liked" element={<LikedProductsPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/team" element={<TeamPage />} />
+              </Route>
+            </Routes>
+          </div>
+        </CartProvider>
+      </FilterProvider>
     </Router>
   );
 }

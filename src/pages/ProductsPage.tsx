@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
+import { Filter, Grid, List, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
+import { useFilters, useProductFilters } from '../hooks/useFilters';
 
 interface Product {
   _id: string;
@@ -19,28 +20,18 @@ interface Product {
   festival?: string[];
   fragrance?: string;
   weight?: string;
+  theme?: string;
 }
 
 export const ProductsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { cart, updateCartItemQuantity } = useCart();
+  const { filterOptions, filterState, updateFilterState, resetFilters, loading: filterLoading } = useFilters();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [sortBy, setSortBy] = useState('newest');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [maxPrice, setMaxPrice] = useState(1000);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
-  const [selectedFestivals, setSelectedFestivals] = useState<string[]>([]);
-  const [selectedFragrances, setSelectedFragrances] = useState<string[]>([]);
-
-  // Custom Order State
-  const [customImage, setCustomImage] = useState<File | null>(null);
-  const [customDescription, setCustomDescription] = useState('');
-  const [customReferenceLink, setCustomReferenceLink] = useState('');
-  const [customLoading, setCustomLoading] = useState(false);
-  const [customMessage, setCustomMessage] = useState('');
 
   const isCandlesPage = location.pathname === '/candles';
 
@@ -48,6 +39,7 @@ export const ProductsPage: React.FC = () => {
     updateCartItemQuantity(productId, quantity);
   };
 
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -55,12 +47,6 @@ export const ProductsPage: React.FC = () => {
         const products = res.data;
 
         console.log('Fetched products:', products);
-
-        if (products.length > 0) {
-          const maxProductPrice = Math.ceil(Math.max(...products.map((p: Product) => p.price)));
-          setMaxPrice(maxProductPrice);
-          setPriceRange([0, maxProductPrice]);
-        }
 
         setAllProducts(products.map((p: any) => ({
           ...p,
@@ -74,25 +60,10 @@ export const ProductsPage: React.FC = () => {
     fetchProducts();
   }, []);
 
+  // Filter products based on current filter state
+  const { filteredProducts } = useProductFilters(allProducts);
 
-  
-  const categories = ['All', 'Candle', 'Custom'];
-  const sortOptions = [
-    { value: 'newest', label: 'Newest First' },
-    { value: 'price-low', label: 'Price: Low to High' },
-    { value: 'price-high', label: 'Price: High to Low' },
-    { value: 'popular', label: 'Most Popular' },
-  ];
-
-  const filteredProducts = allProducts.filter(product => {
-    const categoryMatch = isCandlesPage ? product.category.toLowerCase() === 'candle' : true;
-    const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
-    const festivalMatch = selectedFestivals.length === 0 || (product.festival && product.festival.some(f => selectedFestivals.includes(f)));
-    const fragranceMatch = selectedFragrances.length === 0 || (product.fragrance && selectedFragrances.includes(product.fragrance));
-    return categoryMatch && priceMatch && festivalMatch && fragranceMatch;
-  });
-
-
+  // Sort products
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
@@ -105,6 +76,54 @@ export const ProductsPage: React.FC = () => {
         return 0;
     }
   });
+
+  const sortOptions = [
+    { value: 'newest', label: 'Newest First' },
+    { value: 'price-low', label: 'Price: Low to High' },
+    { value: 'price-high', label: 'Price: High to Low' },
+    { value: 'popular', label: 'Most Popular' },
+  ];
+
+  const handlePriceRangeChange = (value: number) => {
+    updateFilterState({
+      priceRange: [filterState.priceRange[0], value]
+    });
+  };
+
+  const handleFestivalChange = (festival: string, checked: boolean) => {
+    const newFestivals = checked
+      ? [...filterState.selectedFestivals, festival]
+      : filterState.selectedFestivals.filter(f => f !== festival);
+    updateFilterState({ selectedFestivals: newFestivals });
+  };
+
+  const handleFragranceChange = (fragrance: string, checked: boolean) => {
+    const newFragrances = checked
+      ? [...filterState.selectedFragrances, fragrance]
+      : filterState.selectedFragrances.filter(f => f !== fragrance);
+    updateFilterState({ selectedFragrances: newFragrances });
+  };
+
+  const handleThemeChange = (theme: string, checked: boolean) => {
+    const newThemes = checked
+      ? [...filterState.selectedThemes, theme]
+      : filterState.selectedThemes.filter(t => t !== theme);
+    updateFilterState({ selectedThemes: newThemes });
+  };
+
+  const handleWeightChange = (weight: string, checked: boolean) => {
+    const newWeights = checked
+      ? [...filterState.selectedWeights, weight]
+      : filterState.selectedWeights.filter(w => w !== weight);
+    updateFilterState({ selectedWeights: newWeights });
+  };
+
+  const handleCategoryChange = (category: string, checked: boolean) => {
+    const newCategories = checked
+      ? [...filterState.selectedCategories, category]
+      : filterState.selectedCategories.filter(c => c !== category);
+    updateFilterState({ selectedCategories: newCategories });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -136,72 +155,135 @@ export const ProductsPage: React.FC = () => {
               transition={{ duration: 0.6 }}
               className="bg-white rounded-2xl p-6 shadow-sm space-y-6"
             >
-              <h2 className="font-semibold text-gray-900 text-lg">Filters</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-gray-900 text-lg">Filters</h2>
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Reset
+                </button>
+              </div>
 
               {/* Price Range */}
               <div>
                 <h3 className="font-medium text-gray-900 mb-3">Price Range</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span>₹{priceRange[0]}</span>
-                    <span>₹{priceRange[1]}</span>
+                    <span>₹{filterState.priceRange[0]}</span>
+                    <span>₹{filterState.priceRange[1]}</span>
                   </div>
                   <input
                     type="range"
-                    min="0"
-                    max={maxPrice}
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                    min={filterOptions?.priceRanges.min || 0}
+                    max={filterOptions?.priceRanges.max || 1000}
+                    value={filterState.priceRange[1]}
+                    onChange={(e) => handlePriceRangeChange(parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                 </div>
               </div>
 
               {/* Festivals */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-3">By Occasion</h3>
-                <div className="space-y-2">
-                  {['Diwali', 'Holi', 'Valentine', 'Birthday', 'Anniversary', 'Christmas'].map(festival => (
-                    <label key={festival} className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        value={festival}
-                        onChange={e => {
-                          const { value, checked } = e.target;
-                          setSelectedFestivals(prev =>
-                            checked ? [...prev, value] : prev.filter(item => item !== value)
-                          );
-                        }}
-                        className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
-                      />
-                      <span className="text-sm text-gray-600">{festival}</span>
-                    </label>
-                  ))}
+              {filterOptions?.festivals && filterOptions.festivals.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">By Occasion</h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {filterOptions.festivals.map(festival => (
+                      <label key={festival} className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={filterState.selectedFestivals.includes(festival)}
+                          onChange={e => handleFestivalChange(festival, e.target.checked)}
+                          className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                        />
+                        <span className="text-sm text-gray-600">{festival}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Fragrance */}
-              <div>
-                <h3 className="font-medium text-gray-900 mb-3">By Fragrance</h3>
-                <div className="space-y-2">
-                  {['Sandalwood', 'Rose', 'Jasmine'].map(fragrance => (
-                    <label key={fragrance} className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        value={fragrance}
-                        onChange={e => {
-                          const { value, checked } = e.target;
-                          setSelectedFragrances(prev =>
-                            checked ? [...prev, value] : prev.filter(item => item !== value)
-                          );
-                        }}
-                        className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
-                      />
-                      <span className="text-sm text-gray-600">{fragrance}</span>
-                    </label>
-                  ))}
+              {/* Fragrances */}
+              {filterOptions?.fragrances && filterOptions.fragrances.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">By Fragrance</h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {filterOptions.fragrances.map(fragrance => (
+                      <label key={fragrance} className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={filterState.selectedFragrances.includes(fragrance)}
+                          onChange={e => handleFragranceChange(fragrance, e.target.checked)}
+                          className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                        />
+                        <span className="text-sm text-gray-600">{fragrance}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Themes */}
+              {filterOptions?.themes && filterOptions.themes.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">By Theme</h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {filterOptions.themes.map(theme => (
+                      <label key={theme} className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={filterState.selectedThemes.includes(theme)}
+                          onChange={e => handleThemeChange(theme, e.target.checked)}
+                          className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                        />
+                        <span className="text-sm text-gray-600">{theme}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Weights */}
+              {filterOptions?.weights && filterOptions.weights.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">By Weight</h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {filterOptions.weights.map(weight => (
+                      <label key={weight} className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={filterState.selectedWeights.includes(weight)}
+                          onChange={e => handleWeightChange(weight, e.target.checked)}
+                          className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                        />
+                        <span className="text-sm text-gray-600">{weight}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Categories */}
+              {filterOptions?.categories && filterOptions.categories.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-3">By Category</h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {filterOptions.categories.map(category => (
+                      <label key={category} className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={filterState.selectedCategories.includes(category)}
+                          onChange={e => handleCategoryChange(category, e.target.checked)}
+                          className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                        />
+                        <span className="text-sm text-gray-600">{category}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             </motion.div>
           </div>
@@ -223,8 +305,9 @@ export const ProductsPage: React.FC = () => {
                   >
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
+                    {filterLoading && <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />}
                   </button>
-                  
+
                   <span className="text-sm text-gray-600">
                     {sortedProducts.length} products
                   </span>
@@ -277,56 +360,37 @@ export const ProductsPage: React.FC = () => {
                   ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3'
                   : 'grid-cols-1'
               }`}
-
-
             >
-            {sortedProducts.length > 0 ? (
-              sortedProducts.map((product, index) => (
+              {sortedProducts.length > 0 ? (
+                sortedProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                  >
+                    <ProductCard
+                      product={product}
+                      onCartUpdate={handleCartUpdate}
+                      quantity={cart.find(item => item.productId === product.id)?.quantity || 0}
+                    />
+                  </motion.div>
+                ))
+              ) : (
                 <motion.div
-                  key={product.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-16 col-span-full"
                 >
-            <ProductCard
-              product={product}
-              onCartUpdate={handleCartUpdate}
-              quantity={cart.find(item => item.productId === product.id)?.quantity || 0}
-            />
+                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Filter className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 mb-2">No products found</h3>
+                  <p className="text-gray-500">Try adjusting your filters to see more results.</p>
                 </motion.div>
-              ))
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16"
-              >
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Filter className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="font-medium text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-500">Try adjusting your filters to see more results.</p>
-              </motion.div>
-            )}
+              )}
             </motion.div>
-
-            {/* Empty State */}
-            {false && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16"
-              >
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Filter className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="font-medium text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-500">Try adjusting your filters to see more results.</p>
-              </motion.div>
-            )}
-
-            {/* Debug: Show count of products */}
           </div>
         </div>
       </div>

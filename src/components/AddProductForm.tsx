@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, UploadCloud, DollarSign } from 'lucide-react';
 import axios from 'axios';
+import { useFilters } from '../hooks/useFilters';
 
 type ProductType = 'Candle';
 type ContainerType = 'Glass' | 'No Glass';
@@ -47,6 +48,7 @@ interface Step3Props {
 }
 
 export const AddProductForm: React.FC = () => {
+  const { refreshFilters } = useFilters();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     productName: '',
@@ -126,6 +128,10 @@ export const AddProductForm: React.FC = () => {
       });
       console.log('Product added successfully:', response.data);
       alert('Product added successfully!');
+
+      // Refresh filters to include the new product data
+      await refreshFilters();
+
       // Optionally reset form
       setStep(1);
       setFormData({
