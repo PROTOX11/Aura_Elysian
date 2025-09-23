@@ -31,11 +31,13 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
   lazy = true,
 }) => {
   const [loading, setLoading] = useState(true);
+  const [showSpinner, setShowSpinner] = useState(false);
   const [error, setError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<number>();
+  const spinnerTimeoutRef = useRef<number>();
 
   useEffect(() => {
     // Check if image is already cached
@@ -57,6 +59,7 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
 
     // Reset states when src changes and not cached
     setLoading(true);
+    setShowSpinner(false);
     setError(false);
     setImageLoaded(false);
     setShowSuccess(false);
@@ -64,13 +67,26 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+    if (spinnerTimeoutRef.current) {
+      clearTimeout(spinnerTimeoutRef.current);
+    }
+
+    // Show spinner after a small delay to prevent flickering for fast loads
+    spinnerTimeoutRef.current = setTimeout(() => {
+      setShowSpinner(true);
+    }, 100);
   }, [src]);
 
   const handleImageLoad = useCallback(() => {
     setLoading(false);
+    setShowSpinner(false);
     setImageLoaded(true);
     setError(false);
-    
+
+    if (spinnerTimeoutRef.current) {
+      clearTimeout(spinnerTimeoutRef.current);
+    }
+
     if (showSuccessPopup) {
       setShowSuccess(true);
       timeoutRef.current = setTimeout(() => {
@@ -83,8 +99,14 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
 
   const handleImageError = useCallback(() => {
     setLoading(false);
+    setShowSpinner(false);
     setError(true);
     setImageLoaded(false);
+
+    if (spinnerTimeoutRef.current) {
+      clearTimeout(spinnerTimeoutRef.current);
+    }
+
     onError?.();
   }, [onError]);
 
@@ -100,6 +122,9 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (spinnerTimeoutRef.current) {
+        clearTimeout(spinnerTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -107,11 +132,11 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
     <div className={`relative ${containerClassName}`}>
       {/* Loading Spinner */}
       <AnimatePresence>
-        {loading && (
+        {loading && showSpinner && (
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10"
           >
             <div className={`w-8 h-8 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin ${loadingSpinnerClassName}`}></div>
@@ -141,10 +166,10 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
         alt={alt}
         onLoad={handleImageLoad}
         onError={handleImageError}
-        className={`${className} ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+        className={`${className} ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}
         loading={priority ? "eager" : (lazy ? "lazy" : "eager")}
         decoding="async"
-        fetchpriority={priority ? "high" : "auto"}
+        fetchPriority={priority ? "high" : "auto"}
       />
 
       {/* Success Popup */}

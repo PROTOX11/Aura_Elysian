@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowRight, Sparkles, Gift, Star, ChevronRight } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
+import { useImagePreload } from '../hooks/useImagePreload';
 
 // Data Interfaces
 interface Product {
@@ -43,6 +44,10 @@ export const HomePage: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [featuredCollections, setFeaturedCollections] = useState<FeaturedCollection[]>([]);
   const [productQuantities, setProductQuantities] = useState<{ [key: string]: number }>({});
+
+  // Preload featured product images for better performance
+  const featuredProductImages = featuredProducts.map(product => product.primaryImage);
+  useImagePreload(featuredProductImages, featuredProducts.length > 0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -522,15 +527,15 @@ export const HomePage: React.FC = () => {
                 whileHover={{ y: -5 }}
                 className="group bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
               >
-                {/* Quote Icon */}
-                <div className="flex items-center justify-center w-8 h-8 bg-pink-100 rounded-full mb-4 group-hover:bg-pink-200 transition-colors">
-                  <span className="text-lg text-pink-500">"</span>
+                {/* Quote Icon with Review Content */}
+                <div className="flex items-start gap-3 bg-pink-100 rounded-2xl p-4 mb-4 group-hover:bg-pink-200 transition-colors">
+                  <div className="flex items-center justify-center w-8 h-8 bg-pink-200 rounded-full flex-shrink-0 group-hover:bg-pink-300 transition-colors">
+                    <span className="text-lg text-pink-600">"</span>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed text-base flex-1">
+                    {testimonial.text}
+                  </p>
                 </div>
-
-                {/* Review Content */}
-                <p className="text-gray-700 mb-4 leading-relaxed text-base">
-                  {testimonial.text}
-                </p>
 
                 {/* Rating Stars */}
                 <div className="flex items-center gap-1 mb-6">

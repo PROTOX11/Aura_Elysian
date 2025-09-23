@@ -6,6 +6,7 @@ import { Filter, Grid, List, SlidersHorizontal, X, RotateCcw } from 'lucide-reac
 import { ProductCard } from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 import { useFilters, useProductFilters } from '../hooks/useFilters';
+import { useImagePreload } from '../hooks/useImagePreload';
 
 interface Product {
   _id: string;
@@ -43,6 +44,10 @@ export const ProductsPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [festivalInput, setFestivalInput] = useState<string>('');
+
+  // Preload product images for better performance
+  const productImages = allProducts.map(product => product.primaryImage);
+  useImagePreload(productImages, allProducts.length > 0);
 
   const isCandlesPage = location.pathname === '/candles';
 
