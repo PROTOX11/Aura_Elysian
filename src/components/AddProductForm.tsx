@@ -19,6 +19,7 @@ interface FormData {
   description: string;
   price: string;
   productType: ProductType;
+  rating?: string;
 }
 
 // Props Interfaces for each step
@@ -62,6 +63,7 @@ export const AddProductForm: React.FC = () => {
     description: '',
     price: '',
     productType: 'Candle',
+    rating: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -105,6 +107,9 @@ export const AddProductForm: React.FC = () => {
     formDataToSend.append('festival', JSON.stringify(formData.festival));
     formDataToSend.append('description', formData.description);
     formDataToSend.append('primaryIndex', formData.primaryIndex.toString());
+    if (formData.rating !== undefined && formData.rating !== '') {
+      formDataToSend.append('rating', formData.rating);
+    }
 
     if (formData.images.length > 0) {
       formData.images.forEach((file) => {
@@ -139,6 +144,7 @@ export const AddProductForm: React.FC = () => {
         description: '',
         price: '',
         productType: 'Candle',
+        rating: '',
       });
     } catch (error) {
       console.error('Error adding product:', error);
@@ -364,6 +370,21 @@ const Step3 = ({ prevStep, formData, handleSubmit, handleChange }: Step3Props) =
             className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300"
           />
         </div>
+      </div>
+      <div>
+        <label htmlFor="rating" className="font-medium text-gray-800">Rating (0 - 5)</label>
+        <input
+          type="number"
+          id="rating"
+          name="rating"
+          min={0}
+          max={5}
+          step={0.1}
+          value={formData.rating || ''}
+          onChange={handleChange}
+          placeholder="e.g., 4.5"
+          className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300"
+        />
       </div>
 
       <div className="flex justify-between pt-4">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Star, ShoppingCart, CreditCard, ArrowLeft } from 'lucide-react';
+import { Star, ShoppingCart, ArrowLeft } from 'lucide-react';
 
 import { useCart } from '../context/CartContext';
 
@@ -117,12 +117,24 @@ const CandleDetailsPage: React.FC = () => {
         },
       });
       alert('Review submitted successfully!');
+      // Optimistically update product rating and reviews count
+      setProduct(prev => {
+        if (!prev) return prev;
+        const prevReviews = typeof prev.reviews === 'number' ? prev.reviews : 0;
+        const prevRating = typeof prev.rating === 'number' ? prev.rating : 0;
+        const newReviews = prevReviews + 1;
+        const newAvgRating = newReviews > 0 ? ((prevRating * prevReviews) + rating) / newReviews : rating;
+        return { ...prev, reviews: newReviews, rating: newAvgRating };
+      });
       setReviewText('');
       setReviewImages([]);
       setRating(0);
       // Refresh reviews
       const response = await axios.get(`/api/products/${id}/reviews`);
       setReviews(response.data);
+      // Refresh product from server to ensure consistency
+      const productRes = await axios.get(`/api/products/${id}`);
+      setProduct(productRes.data);
 
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -140,7 +152,8 @@ const CandleDetailsPage: React.FC = () => {
         // Set initial main image to primaryImage
 
         setCurrentMainImage(response.data.primaryImage);
-      } catch (err) {
+      } catch (error) {
+        console.error('Failed to load product:', error);
         setError('Failed to load product');
       } finally {
         setLoading(false);
@@ -157,9 +170,8 @@ const CandleDetailsPage: React.FC = () => {
       try {
         const response = await axios.get(`/api/products/${id}/reviews`);
         setReviews(response.data);
-      } catch (err) {
-
-        console.error('Failed to load reviews:', err);
+      } catch (error) {
+        console.error('Failed to load reviews:', error);
       }
     };
 

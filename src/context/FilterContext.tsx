@@ -10,6 +10,10 @@ export interface FilterOptions {
     min: number;
     max: number;
   };
+  weightRanges?: {
+    min: number;
+    max: number;
+  };
   categories: string[];
 }
 
@@ -19,6 +23,7 @@ export interface FilterState {
   selectedThemes: string[];
   selectedWeights: string[];
   priceRange: [number, number];
+  weightRange: [number, number];
   selectedCategories: string[];
 }
 
@@ -58,6 +63,7 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
     selectedThemes: [],
     selectedWeights: [],
     priceRange: [0, 1000],
+    weightRange: [0, 1000],
     selectedCategories: [],
   });
 
@@ -68,16 +74,25 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
       const response = await axios.get('/api/filters');
       setFilterOptions(response.data);
 
-      // Update price range if we have new data
+      // Update price range and weight range if we have new data
       if (response.data.priceRanges) {
         setFilterState(prev => ({
           ...prev,
           priceRange: [response.data.priceRanges.min, response.data.priceRanges.max]
         }));
       }
-    } catch (err: any) {
+
+      if (response.data.weightRanges) {
+        setFilterState(prev => ({
+          ...prev,
+          weightRange: [response.data.weightRanges.min, response.data.weightRanges.max]
+        }));
+      }
+    } catch (err: unknown) {
       console.error('Error fetching filter options:', err);
-      setError(err.response?.data?.message || 'Failed to fetch filter options');
+      const message = (axios.isAxiosError(err) && err.response?.data?.message)
+        || (err instanceof Error ? err.message : 'Failed to fetch filter options');
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -92,16 +107,21 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
   };
 
   const resetFilters = () => {
-    if (filterOptions) {
-      setFilterState({
-        selectedFestivals: [],
-        selectedFragrances: [],
-        selectedThemes: [],
-        selectedWeights: [],
-        priceRange: [filterOptions.priceRanges.min, filterOptions.priceRanges.max],
-        selectedCategories: [],
-      });
-    }
+    // Use fallback values if filterOptions is not loaded yet
+    const defaultMinPrice = filterOptions?.priceRanges.min || 0;
+    const defaultMaxPrice = filterOptions?.priceRanges.max || 1000;
+    const defaultMinWeight = filterOptions?.weightRanges.min || 0;
+    const defaultMaxWeight = filterOptions?.weightRanges.max || 1000;
+
+    setFilterState({
+      selectedFestivals: [],
+      selectedFragrances: [],
+      selectedThemes: [],
+      selectedWeights: [],
+      priceRange: [defaultMinPrice, defaultMaxPrice],
+      weightRange: [defaultMinWeight, defaultMaxWeight],
+      selectedCategories: [],
+    });
   };
 
   const applyCollectionFilter = (collectionTitle: string) => {

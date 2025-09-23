@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useFilters as useFilterContext, FilterState } from '../context/FilterContext';
+import { useFilters as useFilterContext } from '../context/FilterContext';
 
 export const useFilters = () => {
   return useFilterContext();
@@ -66,8 +66,8 @@ export const useProductFilters = (products: Product[]) => {
       filterState.selectedThemes.length +
       filterState.selectedWeights.length +
       filterState.selectedCategories.length +
-      (filterState.priceRange[0] > (filterOptions?.priceRanges.min || 0) ||
-       filterState.priceRange[1] < (filterOptions?.priceRanges.max || 1000) ? 1 : 0)
+      (filterOptions?.priceRanges && (filterState.priceRange[0] > filterOptions.priceRanges.min ||
+       filterState.priceRange[1] < filterOptions.priceRanges.max) ? 1 : 0)
     );
   };
 

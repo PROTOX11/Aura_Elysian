@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Filter, Grid, List, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
@@ -25,9 +25,19 @@ interface Product {
 
 export const ProductsPage: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { cart, updateCartItemQuantity } = useCart();
   const { filterOptions, filterState, updateFilterState, resetFilters, loading: filterLoading, applyCollectionFilter } = useFilters();
+
+  // Check if any filters are active
+  const hasActiveFilters = filterState.selectedFestivals.length > 0 ||
+    filterState.selectedFragrances.length > 0 ||
+    filterState.selectedThemes.length > 0 ||
+    filterState.selectedWeights.length > 0 ||
+    filterState.selectedCategories.length > 0 ||
+    (filterOptions?.priceRanges && filterState.priceRange[0] > (filterOptions.priceRanges.min || 0)) ||
+    (filterOptions?.priceRanges && filterState.priceRange[1] < (filterOptions.priceRanges.max || 1000)) ||
+    (filterOptions?.weightRanges && filterState.weightRange[0] > (filterOptions?.weightRanges?.min || 0)) ||
+    (filterOptions?.weightRanges && filterState.weightRange[1] < (filterOptions?.weightRanges?.max || 1000));
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -44,15 +54,15 @@ export const ProductsPage: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get('/api/products');
+        const res = await axios.get<Product[]>('/api/products');
         const products = res.data;
 
         console.log('Fetched products:', products);
 
-        setAllProducts(products.map((p: any) => ({
+        setAllProducts(products.map((p) => ({
           ...p,
-          id: p._id,
-        })));
+          id: (p as any)._id,
+        })) as Product[]);
 
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -101,13 +111,6 @@ export const ProductsPage: React.FC = () => {
     });
   };
 
-  const handleFestivalChange = (festival: string, checked: boolean) => {
-    const newFestivals = checked
-      ? [...filterState.selectedFestivals, festival]
-      : filterState.selectedFestivals.filter(f => f !== festival);
-    updateFilterState({ selectedFestivals: newFestivals });
-  };
-
   const handleFragranceChange = (fragrance: string, checked: boolean) => {
     const newFragrances = checked
       ? [...filterState.selectedFragrances, fragrance]
@@ -127,13 +130,6 @@ export const ProductsPage: React.FC = () => {
       ? [...filterState.selectedWeights, weight]
       : filterState.selectedWeights.filter(w => w !== weight);
     updateFilterState({ selectedWeights: newWeights });
-  };
-
-  const handleCategoryChange = (category: string, checked: boolean) => {
-    const newCategories = checked
-      ? [...filterState.selectedCategories, category]
-      : filterState.selectedCategories.filter(c => c !== category);
-    updateFilterState({ selectedCategories: newCategories });
   };
 
   return (
@@ -157,24 +153,38 @@ export const ProductsPage: React.FC = () => {
           </p>
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className={`lg:w-64 ${showFilters ? 'block' : 'hidden'}`}>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="bg-white rounded-2xl p-6 shadow-sm space-y-6"
-            >
-              <div className="flex items-center justify-between">
+        <div className="relative">
+          {/* Filters Sidebar - Slides from right */}
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: showFilters ? 0 : '100%' }}
+            transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
+            className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl z-50 overflow-y-auto"
+          >
+            <div className="p-6 space-y-6">
+              {/* Header with close button */}
+              <div className="flex items-center justify-between pb-4 border-b border-gray-200">
                 <h2 className="font-semibold text-gray-900 text-lg">Filters</h2>
-                <button
-                  onClick={resetFilters}
-                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Reset
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={resetFilters}
+                    disabled={!hasActiveFilters}
+                    className={`flex items-center gap-1 text-sm transition-colors ${
+                      hasActiveFilters
+                        ? 'text-gray-500 hover:text-gray-700'
+                        : 'text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Reset
+                  </button>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Price Range */}
@@ -248,6 +258,27 @@ export const ProductsPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Weight Range */}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">Weight Range (grams)</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>{filterState.weightRange[0]}g</span>
+                    <span>{filterState.weightRange[1]}g</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={filterOptions?.weightRanges?.min || 0}
+                    max={filterOptions?.weightRanges?.max || 1000}
+                    value={filterState.weightRange[1]}
+                    onChange={(e) => updateFilterState({
+                      weightRange: [filterState.weightRange[0], parseInt(e.target.value)]
+                    })}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                </div>
+              </div>
+
               {/* Weights */}
               {filterOptions?.weights && filterOptions.weights.length > 0 && (
                 <div>
@@ -267,11 +298,8 @@ export const ProductsPage: React.FC = () => {
                   </div>
                 </div>
               )}
-
-
-
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
 
           {/* Main Content */}
           <div className="flex-1">
@@ -286,10 +314,29 @@ export const ProductsPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
+                      showFilters
+                        ? 'bg-pink-100 text-pink-700'
+                        : hasActiveFilters
+                        ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
                   >
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
+                    {hasActiveFilters && (
+                      <span className="bg-pink-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        {filterState.selectedFestivals.length +
+                         filterState.selectedFragrances.length +
+                         filterState.selectedThemes.length +
+                         filterState.selectedWeights.length +
+                         filterState.selectedCategories.length +
+                         (filterOptions?.priceRanges && filterState.priceRange[0] > (filterOptions.priceRanges.min || 0) ||
+                          filterState.priceRange[1] < (filterOptions?.priceRanges.max || 1000) ? 1 : 0) +
+                         (filterOptions?.weightRanges && filterState.weightRange[0] > (filterOptions.weightRanges.min || 0) ||
+                          filterState.weightRange[1] < (filterOptions?.weightRanges.max || 1000) ? 1 : 0)}
+                      </span>
+                    )}
                     {filterLoading && <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />}
                   </button>
 

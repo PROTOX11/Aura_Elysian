@@ -424,6 +424,32 @@ app.post('/api/productreviews', auth, upload.fields([{ name: 'image', maxCount: 
         const savedItem = await productReview.save();
         console.log('Product review saved successfully:', savedItem);
 
+        // Increment product reviews count and update average rating
+        const productId = savedItem.productId;
+        if (productId) {
+            const product = await Product.findById(productId);
+            if (product) {
+                const previousReviews = typeof product.reviews === 'number' ? product.reviews : 0;
+                const previousRating = typeof product.rating === 'number' ? product.rating : 0;
+                const incomingRating = typeof reviewData.rating !== 'undefined' ? Number(reviewData.rating) : NaN;
+                const newReviews = previousReviews + 1;
+                const newAvgRating = !isNaN(incomingRating)
+                    ? ((previousRating * previousReviews) + incomingRating) / newReviews
+                    : previousRating;
+
+                await Product.findByIdAndUpdate(productId, {
+                    $inc: { reviews: 1 },
+                    $set: { rating: newAvgRating }
+                });
+
+                // Keep TrendingProduct in sync if it exists
+                await TrendingProduct.updateMany({ productId }, {
+                    $inc: { reviews: 1 },
+                    $set: { rating: newAvgRating }
+                });
+            }
+        }
+
         res.status(201).json({ message: 'Product review added successfully' });
     } catch (error) {
         console.error('Error saving product review:', error.stack || error);
