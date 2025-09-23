@@ -35,8 +35,8 @@ interface Step2Props {
   nextStep: () => void;
   prevStep: () => void;
   formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   setContainer: (container: ContainerType) => void;
-  toggleFestival: (festival: string) => void;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -85,14 +85,7 @@ export const AddProductForm: React.FC = () => {
     setFormData(prev => ({ ...prev, container }));
   };
 
-  const toggleFestival = (festival: string) => {
-    setFormData(prev => {
-      const festivals = prev.festival.includes(festival)
-        ? prev.festival.filter(f => f !== festival)
-        : [...prev.festival, festival];
-      return { ...prev, festival: festivals };
-    });
-  };
+
 
   const handleSubmit = async () => {
     const token = localStorage.getItem('aura-token');
@@ -161,7 +154,7 @@ export const AddProductForm: React.FC = () => {
       case 1:
         return <Step1 nextStep={nextStep} formData={formData} setFormData={setFormData} setProductType={setProductType} handleChange={handleChange} handleFileChange={handleFileChange} />;
       case 2:
-        return <Step2 nextStep={nextStep} prevStep={prevStep} formData={formData} setContainer={setContainer} toggleFestival={toggleFestival} handleChange={handleChange} />;
+        return <Step2 nextStep={nextStep} prevStep={prevStep} formData={formData} setFormData={setFormData} setContainer={setContainer} handleChange={handleChange} />;
       case 3:
         return <Step3 prevStep={prevStep} formData={formData} handleSubmit={handleSubmit} handleChange={handleChange} />;
       default:
@@ -268,9 +261,8 @@ const Step1 = ({ nextStep, formData, setFormData, setProductType, handleChange, 
   );
 };
 
-const Step2 = ({ nextStep, prevStep, formData, setContainer, toggleFestival, handleChange }: Step2Props) => {
+const Step2 = ({ nextStep, prevStep, formData, setFormData, setContainer, handleChange }: Step2Props) => {
   const [direction] = useState(1);
-  const festivals = ['Valentine', 'Halloween', 'Birthday', 'Christmas', 'Anniversary'];
 
   return (
     <motion.div
@@ -320,19 +312,11 @@ const Step2 = ({ nextStep, prevStep, formData, setContainer, toggleFestival, han
       </div>
 
       <div>
-        <label className="font-medium text-gray-800">Festival Themed</label>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {festivals.map(festival => (
-            <button
-              type="button"
-              key={festival}
-              onClick={() => toggleFestival(festival)}
-              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${formData.festival.includes(festival) ? 'bg-pink-100 text-pink-700 border-pink-500' : 'border-gray-300 text-gray-600 hover:border-pink-500 hover:text-pink-600'}`}
-            >
-              {festival}
-            </button>
-          ))}
-        </div>
+        <label htmlFor="festival" className="font-medium text-gray-800">Festival Themed</label>
+        <input type="text" id="festival" name="festival" value={formData.festival.join(', ')} onChange={(e) => {
+          const festivals = e.target.value.split(',').map(f => f.trim()).filter(f => f.length > 0);
+          setFormData(prev => ({ ...prev, festival: festivals }));
+        }} placeholder="e.g., Valentine, Halloween, Birthday" className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300" />
       </div>
 
       <div className="flex justify-between pt-4">

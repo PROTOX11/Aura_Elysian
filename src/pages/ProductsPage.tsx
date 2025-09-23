@@ -32,6 +32,7 @@ export const ProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [festivalInput, setFestivalInput] = useState<string>('');
 
   const isCandlesPage = location.pathname === '/candles';
 
@@ -186,24 +187,16 @@ export const ProductsPage: React.FC = () => {
               </div>
 
               {/* Festivals */}
-              {filterOptions?.festivals && filterOptions.festivals.length > 0 && (
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-3">By Occasion</h3>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {filterOptions.festivals.map(festival => (
-                      <label key={festival} className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={filterState.selectedFestivals.includes(festival)}
-                          onChange={e => handleFestivalChange(festival, e.target.checked)}
-                          className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
-                        />
-                        <span className="text-sm text-gray-600">{festival}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div>
+                <h3 className="font-medium text-gray-900 mb-3">By Occasion</h3>
+                <input
+                  type="text"
+                  value={festivalInput}
+                  onChange={(e) => setFestivalInput(e.target.value)}
+                  placeholder="Type festival/occasion..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm"
+                />
+              </div>
 
               {/* Fragrances */}
               {filterOptions?.fragrances && filterOptions.fragrances.length > 0 && (
@@ -265,25 +258,7 @@ export const ProductsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Categories */}
-              {filterOptions?.categories && filterOptions.categories.length > 0 && (
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-3">By Category</h3>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {filterOptions.categories.map(category => (
-                      <label key={category} className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={filterState.selectedCategories.includes(category)}
-                          onChange={e => handleCategoryChange(category, e.target.checked)}
-                          className="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
-                        />
-                        <span className="text-sm text-gray-600">{category}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
+
 
             </motion.div>
           </div>
