@@ -12,6 +12,8 @@
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.11.0",
+    "cloudinary": "^2.7.0",
+    "cloudinary-react": "^1.8.1",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

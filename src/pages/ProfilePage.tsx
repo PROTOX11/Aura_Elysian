@@ -47,6 +47,7 @@ export const ProfilePage: React.FC = () => {
         });
         if (response.ok) {
           const data = await response.json();
+          console.log('Fetched user profile:', data.user);
           setUser(data.user);
         } else {
           console.error('Failed to fetch user profile');
@@ -156,6 +157,7 @@ export const ProfilePage: React.FC = () => {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('Profile update response:', data);
         setUser(data.user);
         setImageFile(null);
       } else {
@@ -186,7 +188,10 @@ export const ProfilePage: React.FC = () => {
           <div className="text-center mb-8">
             <div className="relative w-24 h-24 mx-auto mb-4">
               <img
-                src={imageFile ? URL.createObjectURL(imageFile) : (user.image ? `http://localhost:5000${user.image}` : 'https://via.placeholder.com/96x96/cccccc/000000?text=Profile')}
+                src={imageFile ? URL.createObjectURL(imageFile) : (user.image ? (() => {
+                  console.log('Using user image URL:', user.image);
+                  return user.image;
+                })() : 'https://via.placeholder.com/96x96/cccccc/000000?text=Profile')}
                 alt={user.name}
                 className="w-24 h-24 rounded-full object-cover"
               />

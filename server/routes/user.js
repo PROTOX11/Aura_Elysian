@@ -1,20 +1,7 @@
 import express from 'express';
 import { auth } from '../middleware/auth.js';
 import User from '../models/User.js';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import sharp from 'sharp';
-
-const storage = multer.memoryStorage();
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-    } else {
-        cb(new Error('Only image files are allowed'), false);
-    }
-};
-const upload = multer({ storage, fileFilter });
+import { upload, uploadSingleImage } from '../services/uploadService.js';
 
 const router = express.Router();
 
@@ -50,21 +37,14 @@ router.put('/profile', auth, upload.single('image'), async (req, res) => {
     if (email !== undefined && email !== '') updateData.email = email;
 
     if (req.file) {
-      const uploadDir = 'uploads/';
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir);
-      }
-      const filename = Date.now() + '.jpg';
-      const filepath = path.join(uploadDir, filename);
       try {
-        await sharp(req.file.buffer)
-          .resize(200, 200, { fit: 'cover' })
-          .jpeg({ quality: 80 })
-          .toFile(filepath);
-        updateData.image = `/uploads/${filename}`;
+        // Upload to Cloudinary instead of local storage
+        const result = await uploadSingleImage(req.file, 'profile-pictures');
+        updateData.image = result.secure_url;
+        console.log('Cloudinary upload successful:', result.secure_url);
       } catch (error) {
-        console.error('Error processing image:', error);
-        return res.status(500).json({ message: 'Error processing image' });
+        console.error('Error uploading to Cloudinary:', error);
+        return res.status(500).json({ message: 'Error uploading image' });
       }
     }
 
@@ -78,6 +58,7 @@ router.put('/profile', auth, upload.single('image'), async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    console.log('Updated user data:', updatedUser);
     res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
     console.error('Error updating profile:', error.stack || error);
@@ -103,21 +84,13 @@ router.post('/signup', upload.single('image'), async (req, res) => {
     const newUserData = { name, email, password };
 
     if (req.file) {
-      const uploadDir = 'uploads/';
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir);
-      }
-      const filename = Date.now() + '.jpg';
-      const filepath = path.join(uploadDir, filename);
       try {
-        await sharp(req.file.buffer)
-          .resize(200, 200, { fit: 'cover' })
-          .jpeg({ quality: 80 })
-          .toFile(filepath);
-        newUserData.image = `/uploads/${filename}`;
+        // Upload to Cloudinary instead of local storage
+        const result = await uploadSingleImage(req.file, 'profile-pictures');
+        newUserData.image = result.secure_url;
       } catch (error) {
-        console.error('Error processing image:', error);
-        return res.status(500).json({ message: 'Error processing image' });
+        console.error('Error uploading to Cloudinary:', error);
+        return res.status(500).json({ message: 'Error uploading image' });
       }
     }
 

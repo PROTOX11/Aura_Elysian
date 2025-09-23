@@ -4,8 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import multer from 'multer';
-import path from 'path';
+import { upload, uploadSingleImage, uploadMultipleImages, deleteImage } from './services/uploadService.js';
 
 dotenv.config();
 const app = express();
@@ -13,24 +12,6 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
-
-import fs from 'fs';
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = 'uploads/';
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir);
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage });
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -56,19 +37,6 @@ import User from './models/User.js';
 import CustomOrder from './models/CustomOrder.js';
 import Cart from './models/Cart.js';
 import TrendingProduct from './models/TrendingProduct.js';
-
-
-// General User Schema
-// Remove duplicate userSchema and User model definition here to avoid OverwriteModelError
-// const userSchema = new mongoose.Schema({
-//     name: { type: String, required: true },
-//     email: { type: String, required: true, unique: true },
-//     password: { type: String, required: true },
-//     username: { type: String },
-//     mobile: { type: String },
-//     address: { type: String },
-// });
-// const User = mongoose.model('User', userSchema);
 
 const productSchema = new mongoose.Schema({
     name: String,
@@ -130,9 +98,12 @@ const FeaturedCollection = mongoose.model('FeaturedCollection', featuredCollecti
 
 import { auth } from './middleware/auth.js';
 import userRoutes from './routes/user.js';
+import uploadRoutes from './routes/upload.js';
 
 // Routes
 app.use('/api', userRoutes);
+app.use('/api/upload', uploadRoutes);
+
 app.get('/api/products', async (req, res) => {
     const { limit } = req.query;
     let query = Product.find();
@@ -234,13 +205,21 @@ app.get('/api/products/:id/reviews', async (req, res) => {
 app.post('/api/products', auth, upload.array('images', 5), async (req, res) => {
     console.log('Received authenticated request to add product:', req.body);
     try {
-        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
-        const primaryIndex = parseInt(req.body.primaryIndex) || 0;
-        const primaryImage = imagePaths[primaryIndex] || '';
+        let imageUrls = [];
+        let primaryImage = '';
+
+        if (req.files && req.files.length > 0) {
+            // Upload images to Cloudinary
+            const cloudinaryResults = await uploadMultipleImages(req.files, 'products');
+            imageUrls = cloudinaryResults.map(result => result.secure_url);
+
+            const primaryIndex = parseInt(req.body.primaryIndex) || 0;
+            primaryImage = imageUrls[primaryIndex] || imageUrls[0] || '';
+        }
 
         const productData = {
             ...req.body,
-            images: imagePaths,
+            images: imageUrls,
             primaryImage: primaryImage,
             uploadedBy: req.user.id,
             festival: req.body.festival ? JSON.parse(req.body.festival) : [],
@@ -261,9 +240,17 @@ app.post('/api/custom-orders', auth, upload.single('image'), async (req, res) =>
     try {
         console.log('req.user:', req.user);
         console.log('req.user.id:', req.user.id);
+
+        let imageUrl = '';
+        if (req.file) {
+            // Upload image to Cloudinary
+            const cloudinaryResult = await uploadSingleImage(req.file, 'custom-orders');
+            imageUrl = cloudinaryResult.secure_url;
+        }
+
         const customOrderData = {
             userId: req.user.id,
-            image: req.file ? `/uploads/${req.file.filename}` : '',
+            image: imageUrl,
             description: req.body.description || '',
             referenceLink: req.body.referenceLink || '',
         };
@@ -279,7 +266,6 @@ app.post('/api/custom-orders', auth, upload.single('image'), async (req, res) =>
 });
 
 // Cart API
-
 app.get('/api/cart', auth, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -305,7 +291,7 @@ app.put('/api/cart', auth, async (req, res) => {
             // If no cart, create one
             const product = await Product.findById(productId);
             if (!product) return res.status(404).json({ message: 'Product not found' });
-            
+
             const newCart = await Cart.create({
                 userId,
                 products: [{
@@ -318,7 +304,7 @@ app.put('/api/cart', auth, async (req, res) => {
             });
             return res.status(201).json(newCart);
         }
-        
+
         if (cart) {
             const itemIndex = cart.products.findIndex(p => p.productId.toString() === productId);
 
@@ -347,7 +333,7 @@ app.put('/api/cart', auth, async (req, res) => {
             cart = await cart.save();
             return res.status(200).json(cart);
         }
-        
+
         return res.status(400).json({ message: "Invalid request" });
 
     } catch (error) {
@@ -364,9 +350,16 @@ app.get('/api/testimonials', async (req, res) => {
 app.post('/api/testimonials', auth, upload.single('image'), async (req, res) => {
     console.log('Received authenticated request to add testimonial:', req.body);
     try {
+        let imageUrl = '';
+        if (req.file) {
+            // Upload image to Cloudinary
+            const cloudinaryResult = await uploadSingleImage(req.file, 'testimonials');
+            imageUrl = cloudinaryResult.secure_url;
+        }
+
         const testimonialData = {
             ...req.body,
-            image: req.file ? `/uploads/${req.file.filename}` : '',
+            image: imageUrl,
         };
 
         const testimonial = new Testimonial(testimonialData);
@@ -411,8 +404,20 @@ app.post('/api/productreviews', auth, upload.fields([{ name: 'image', maxCount: 
             userName = req.body.name;
         }
 
-        const profileImagePath = req.files.image ? `/uploads/${req.files.image[0].filename}` : '';
-        const productImagePaths = req.files.images ? req.files.images.map(file => `/uploads/${file.filename}`) : [];
+        let profileImagePath = '';
+        let productImagePaths = [];
+
+        // Upload profile image to Cloudinary
+        if (req.files.image && req.files.image[0]) {
+            const cloudinaryResult = await uploadSingleImage(req.files.image[0], 'reviews');
+            profileImagePath = cloudinaryResult.secure_url;
+        }
+
+        // Upload product images to Cloudinary
+        if (req.files.images && req.files.images.length > 0) {
+            const cloudinaryResults = await uploadMultipleImages(req.files.images, 'reviews');
+            productImagePaths = cloudinaryResults.map(result => result.secure_url);
+        }
 
         const reviewData = {
             ...req.body,
@@ -466,9 +471,9 @@ app.get('/api/featured-collections', async (req, res) => {
 
 // Debug endpoint to check token validity
 app.get('/api/auth/verify', auth, (req, res) => {
-    res.json({ 
-        message: 'Token is valid', 
-        user: { id: req.user.id, email: req.user.email } 
+    res.json({
+        message: 'Token is valid',
+        user: { id: req.user.id, email: req.user.email }
     });
 });
 
@@ -476,15 +481,22 @@ app.post('/api/featured-collections', auth, upload.array('image', 4), async (req
     console.log('Received authenticated request to add featured collection:', req.body);
     console.log('User from auth middleware:', req.user);
     console.log('Files received:', req.files ? req.files.length : 0);
-    
+
     try {
-        const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
-        const primaryImage = imagePaths[0] || '';
+        let imageUrls = [];
+        let primaryImage = '';
+
+        if (req.files && req.files.length > 0) {
+            // Upload images to Cloudinary
+            const cloudinaryResults = await uploadMultipleImages(req.files, 'collections');
+            imageUrls = cloudinaryResults.map(result => result.secure_url);
+            primaryImage = imageUrls[0] || '';
+        }
 
         const collectionData = {
             ...req.body,
             image: primaryImage, // Keep for backward compatibility
-            images: imagePaths, // Store all images
+            images: imageUrls, // Store all images
             uploadedBy: req.user.id,
         };
 

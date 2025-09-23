@@ -1,6 +1,7 @@
 import React, { useState, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Instagram, Youtube, Heart, Star } from 'lucide-react';
+import { Logo } from './Logo';
 
 const Footer: React.FC = memo(() => {
   const currentYear = new Date().getFullYear();
@@ -88,9 +89,34 @@ const Footer: React.FC = memo(() => {
               Crafting beautiful, handcrafted candles to illuminate your space with elegance and serenity.
             </p>
             
-            {/* Contact Info */}
+            {/* Contact Info with Logo */}
             <div className="space-y-2">
-              <h4 className="font-semibold text-gray-900 text-sm">Get in Touch</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-gray-900 text-sm">Get in Touch</h4>
+                <Logo className="h-6 w-6" showText={true} />
+              </div>
+              
+              {/* Social Media Icons */}
+              <div className="flex gap-2 mb-3">
+                {[
+                  { href: 'https://instagram.com/auraelysian', icon: Instagram, label: 'Instagram' },
+                  { href: 'https://youtube.com/auraelysian', icon: Youtube, label: 'YouTube' }
+                ].map(({ href, icon: Icon, label }) => (
+                  <motion.a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-pink-600 rounded-lg transition-all duration-200"
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label={label}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </motion.a>
+                ))}
+              </div>
+              
               <div className="space-y-2">
                 <motion.a
                   href="mailto:info@auraelysian.com"
@@ -126,29 +152,8 @@ const Footer: React.FC = memo(() => {
             </div>
           </div>
 
-          {/* Social & Legal - Right */}
+          {/* Legal - Right */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-gray-900">Follow Us</h4>
-            <div className="flex gap-2 mb-4">
-              {[
-                { href: 'https://instagram.com/auraelysian', icon: Instagram, label: 'Instagram' },
-                { href: 'https://youtube.com/auraelysian', icon: Youtube, label: 'YouTube' }
-              ].map(({ href, icon: Icon, label }) => (
-                <motion.a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-gray-100 hover:bg-pink-100 text-gray-600 hover:text-pink-600 rounded-lg transition-all duration-200"
-                  whileHover={{ scale: 1.05, y: -1 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label={label}
-                >
-                  <Icon className="h-4 w-4" />
-                </motion.a>
-              ))}
-            </div>
-            
             <div>
               <h4 className="font-semibold text-gray-900 text-sm mb-2">Legal</h4>
               <div className="space-y-1">

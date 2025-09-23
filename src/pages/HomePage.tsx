@@ -567,7 +567,7 @@ export const HomePage: React.FC = () => {
             className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center"
           >
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-              <div className="text-3xl font-bold text-pink-600 mb-2">10,000+</div>
+              <div className="text-3xl font-bold text-pink-600 mb-2">100+</div>
               <div className="text-gray-600">Happy Customers</div>
             </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
@@ -575,7 +575,7 @@ export const HomePage: React.FC = () => {
               <div className="text-gray-600">Average Rating</div>
             </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-              <div className="text-3xl font-bold text-amber-600 mb-2">50,000+</div>
+              <div className="text-3xl font-bold text-amber-600 mb-2">122+</div>
               <div className="text-gray-600">Candles Sold</div>
             </div>
           </motion.div>
