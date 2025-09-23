@@ -30,13 +30,13 @@ export const Navbar: React.FC = () => {
   const isActive = (href: string) => location.pathname === href;
 
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg shadow-gray-100/50' 
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg shadow-gray-100/50'
           : 'bg-white/80 backdrop-blur-md border-b border-gray-100'
       }`}
     >
@@ -55,7 +55,7 @@ export const Navbar: React.FC = () => {
 
           {/* Enhanced Desktop Search */}
           <div className="hidden lg:block flex-1 max-w-2xl mx-8">
-            <motion.div 
+            <motion.div
               className="relative"
               whileFocus={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
@@ -133,7 +133,7 @@ export const Navbar: React.FC = () => {
                 />
               </Link>
             </motion.div>
-            
+
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
@@ -143,7 +143,7 @@ export const Navbar: React.FC = () => {
                 className="relative p-3 text-gray-700 hover:text-pink-600 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 rounded-full transition-all duration-300 group"
               >
                 <ShoppingBag className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                <motion.span 
+                <motion.span
                   className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg"
                   animate={{ scale: getCartCount() > 0 ? [1, 1.2, 1] : 1 }}
                   transition={{ duration: 0.3 }}
@@ -156,7 +156,7 @@ export const Navbar: React.FC = () => {
                 />
               </Link>
             </motion.div>
-            
+
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
@@ -203,7 +203,7 @@ export const Navbar: React.FC = () => {
           >
             <div className="px-4 py-6 space-y-6">
               {/* Enhanced Mobile Search */}
-              <motion.div 
+              <motion.div
                 className="relative"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -230,7 +230,7 @@ export const Navbar: React.FC = () => {
               </motion.div>
 
               {/* Enhanced Mobile Navigation Links */}
-              <motion.div 
+              <motion.div
                 className="space-y-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -268,7 +268,7 @@ export const Navbar: React.FC = () => {
               </motion.div>
 
               {/* Enhanced Mobile Actions */}
-              <motion.div 
+              <motion.div
                 className="flex items-center justify-around pt-6 border-t border-gray-200"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -287,7 +287,7 @@ export const Navbar: React.FC = () => {
                     <span className="text-xs mt-1 font-medium">Wishlist</span>
                   </Link>
                 </motion.div>
-                
+
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -299,7 +299,7 @@ export const Navbar: React.FC = () => {
                   >
                     <ShoppingBag className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
                     <span className="text-xs mt-1 font-medium">Cart</span>
-                    <motion.span 
+                    <motion.span
                       className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg"
                       animate={{ scale: getCartCount() > 0 ? [1, 1.2, 1] : 1 }}
                       transition={{ duration: 0.3 }}
@@ -308,7 +308,7 @@ export const Navbar: React.FC = () => {
                     </motion.span>
                   </Link>
                 </motion.div>
-                
+
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
