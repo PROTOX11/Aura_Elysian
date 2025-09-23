@@ -278,7 +278,6 @@ app.post("/api/products", auth, upload.array("images", 5), async (req, res) => {
             // Create upload directory if it doesn't exist
             const uploadDir = path.join(
               process.cwd(),
-              "server",
               "uploads",
               "products",
             );
@@ -479,7 +478,7 @@ app.post(
           const path = await import("path");
 
           // Create upload directory if it doesn't exist
-          const uploadDir = path.join(process.cwd(), "server", "uploads", "testimonials");
+          const uploadDir = path.join(process.cwd(), "uploads", "testimonials");
           if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
           }
@@ -578,7 +577,7 @@ app.post(
           const path = await import("path");
 
           // Create upload directory if it doesn't exist
-          const uploadDir = path.join(process.cwd(), "server", "uploads", "reviews");
+          const uploadDir = path.join(process.cwd(), "uploads", "reviews");
           if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
           }
@@ -614,7 +613,7 @@ app.post(
           productImagePaths = await Promise.all(
             req.files.images.map(async (file) => {
               // Create upload directory if it doesn't exist
-              const uploadDir = path.join(process.cwd(), "server", "uploads", "reviews");
+              const uploadDir = path.join(process.cwd(), "uploads", "reviews");
               if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
               }
@@ -743,7 +742,6 @@ app.post(
               // Create upload directory if it doesn't exist
               const uploadDir = path.join(
                 process.cwd(),
-                "server",
                 "uploads",
                 "collections",
               );
@@ -950,7 +948,15 @@ app.post("/api/signup", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     // Store password as plain text (insecure)
     const result = await User.create({ name, email, password });
-    res.status(201).json({ result });
+
+    // Generate JWT token for automatic login
+    const token = jwt.sign(
+      { email: result.email, id: result._id },
+      process.env.JWT_SECRET || "test",
+      { expiresIn: "1h" }
+    );
+
+    res.status(201).json({ result, token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });

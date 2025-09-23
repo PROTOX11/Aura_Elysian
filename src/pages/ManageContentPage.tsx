@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Star, Upload, User, MessageSquare, Trash2, Plus, X, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { motion } from "framer-motion";
+import {
+  Star,
+  Upload,
+  User,
+  MessageSquare,
+  Trash2,
+  Plus,
+  X,
+  Image as ImageIcon,
+} from "lucide-react";
 
 interface Testimonial {
   _id: string;
@@ -10,8 +19,6 @@ interface Testimonial {
   rating: number;
   image: string;
 }
-
-
 
 interface TrendingProduct {
   _id: string;
@@ -32,40 +39,44 @@ interface FeaturedCollection {
 }
 
 export const ManageContentPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'testimonials' | 'trending' | 'featuredCollections'>('testimonials');
+  const [activeTab, setActiveTab] = useState<
+    "testimonials" | "trending" | "featuredCollections"
+  >("testimonials");
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>([]);
-  const [featuredCollections, setFeaturedCollections] = useState<FeaturedCollection[]>([]);
+  const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>(
+    [],
+  );
+  const [featuredCollections, setFeaturedCollections] = useState<
+    FeaturedCollection[]
+  >([]);
 
   // Form states for adding new content
   const [newTestimonial, setNewTestimonial] = useState({
-    name: '',
-    text: '',
+    name: "",
+    text: "",
     rating: 5,
     image: null as File | null,
   });
 
-
-
   const [newTrendingProduct, setNewTrendingProduct] = useState({
-    productId: '',
+    productId: "",
     images: [] as File[],
-    festival: '',
-    description: '',
-    category: '',
-    fragrance: '',
-    weight: '',
-    container: '',
+    festival: "",
+    description: "",
+    category: "",
+    fragrance: "",
+    weight: "",
+    container: "",
   });
 
   // Form states for featured collections
   const [newCollection, setNewCollection] = useState({
-    name: '',
-    title: '',
-    description: 'Featured collection',
-    link: '/products',
-    color: 'from-pink-500 to-purple-600',
-    type: 'theme',
+    name: "",
+    title: "",
+    description: "Featured collection",
+    link: "/products",
+    color: "from-pink-500 to-purple-600",
+    type: "theme",
     images: [] as File[],
   });
   const [loading, setLoading] = useState(false);
@@ -77,23 +88,23 @@ export const ManageContentPage: React.FC = () => {
   }, []);
 
   const checkTokenValidity = async () => {
-    const token = localStorage.getItem('aura-token');
+    const token = localStorage.getItem("aura-token");
     if (!token) {
-      console.log('No token found in localStorage');
+      console.log("No token found in localStorage");
       return;
     }
 
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/verify', {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await axios.get("/api/auth/verify", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Token is valid:', response.data);
+      console.log("Token is valid:", response.data);
     } catch (error) {
-      console.error('Token validation failed:', error);
+      console.error("Token validation failed:", error);
       if (error.response?.status === 401) {
-        console.log('Token is invalid or expired, redirecting to login');
-        localStorage.removeItem('aura-token');
-        window.location.href = '/team/login';
+        console.log("Token is invalid or expired, redirecting to login");
+        localStorage.removeItem("aura-token");
+        window.location.href = "/team/login";
       }
     }
   };
@@ -101,35 +112,37 @@ export const ManageContentPage: React.FC = () => {
   const fetchData = async () => {
     try {
       const [testRes, trendRes, collectionsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/testimonials'),
-        axios.get('http://localhost:5000/api/trending-products'),
-        axios.get('http://localhost:5000/api/featured-collections'),
+        axios.get("/api/testimonials"),
+        axios.get("/api/trending-products"),
+        axios.get("/api/featured-collections"),
       ]);
       setTestimonials(testRes.data);
       setTrendingProducts(trendRes.data);
       setFeaturedCollections(collectionsRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     }
   };
 
   // Handlers for form inputs
-  const handleTestimonialChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleTestimonialChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setNewTestimonial(prev => ({ ...prev, [name]: value }));
+    setNewTestimonial((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleTestimonialImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTestimonialImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (e.target.files && e.target.files[0]) {
-      setNewTestimonial(prev => ({ ...prev, image: e.target.files![0] }));
+      setNewTestimonial((prev) => ({ ...prev, image: e.target.files![0] }));
     }
   };
 
   const handleRatingChange = (rating: number) => {
-    setNewTestimonial(prev => ({ ...prev, rating }));
+    setNewTestimonial((prev) => ({ ...prev, rating }));
   };
-
-
 
   // Removed unused handler 'handleTrendingProductChange'
 
@@ -138,116 +151,122 @@ export const ManageContentPage: React.FC = () => {
   // Submit handlers
   const submitTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('aura-token');
+    const token = localStorage.getItem("aura-token");
     if (!token) {
-      alert('Please login to add testimonial');
+      alert("Please login to add testimonial");
       return;
     }
     const formData = new FormData();
-    formData.append('name', newTestimonial.name);
-    formData.append('text', newTestimonial.text);
-    formData.append('rating', newTestimonial.rating.toString());
+    formData.append("name", newTestimonial.name);
+    formData.append("text", newTestimonial.text);
+    formData.append("rating", newTestimonial.rating.toString());
     if (newTestimonial.image) {
-      formData.append('image', newTestimonial.image);
+      formData.append("image", newTestimonial.image);
     }
     try {
-      await axios.post('http://localhost:5000/api/testimonials', formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      await axios.post("/api/testimonials", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
-      alert('Testimonial added successfully');
-      setNewTestimonial({ name: '', text: '', rating: 5, image: null });
+      alert("Testimonial added successfully");
+      setNewTestimonial({ name: "", text: "", rating: 5, image: null });
       fetchData();
     } catch (error) {
-      console.error('Error adding testimonial:', error);
-      alert('Failed to add testimonial');
+      console.error("Error adding testimonial:", error);
+      alert("Failed to add testimonial");
     }
   };
 
   const deleteTestimonial = async (id: string) => {
-    const token = localStorage.getItem('aura-token');
+    const token = localStorage.getItem("aura-token");
     if (!token) {
-      alert('Please login to delete testimonial');
+      alert("Please login to delete testimonial");
       return;
     }
-    if (!confirm('Are you sure you want to delete this testimonial?')) {
+    if (!confirm("Are you sure you want to delete this testimonial?")) {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/testimonials/${id}`, {
+      await axios.delete(`/api/testimonials/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Testimonial deleted successfully');
+      alert("Testimonial deleted successfully");
       fetchData();
     } catch (error) {
-      console.error('Error deleting testimonial:', error);
-      alert('Failed to delete testimonial');
+      console.error("Error deleting testimonial:", error);
+      alert("Failed to delete testimonial");
     }
   };
 
-
-
   const submitTrendingProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('aura-token');
+    const token = localStorage.getItem("aura-token");
     if (!token) {
-      alert('Please login to add trending product');
+      alert("Please login to add trending product");
       return;
     }
     const formData = new FormData();
-    formData.append('productId', newTrendingProduct.productId);
+    formData.append("productId", newTrendingProduct.productId);
     try {
-      await axios.post('http://localhost:5000/api/trending-products', formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      await axios.post("/api/trending-products", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
-      alert('Trending product added successfully');
+      alert("Trending product added successfully");
       setNewTrendingProduct({
-        productId: '',
+        productId: "",
         images: [],
-        festival: '',
-        description: '',
-        category: '',
-        fragrance: '',
-        weight: '',
-        container: '',
+        festival: "",
+        description: "",
+        category: "",
+        fragrance: "",
+        weight: "",
+        container: "",
       });
       fetchData();
     } catch (error) {
-      console.error('Error adding trending product:', error);
-      alert('Failed to add trending product');
+      console.error("Error adding trending product:", error);
+      alert("Failed to add trending product");
     }
   };
 
   const removeTrendingProduct = async (id: string) => {
-    const token = localStorage.getItem('aura-token');
+    const token = localStorage.getItem("aura-token");
     if (!token) {
-      alert('Please login to remove trending product');
+      alert("Please login to remove trending product");
       return;
     }
-    if (!confirm('Are you sure you want to remove this trending product?')) {
+    if (!confirm("Are you sure you want to remove this trending product?")) {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/trending-products/${id}`, {
+      await axios.delete(`/api/trending-products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Trending product removed successfully');
+      alert("Trending product removed successfully");
       fetchData();
     } catch (error) {
-      console.error('Error removing trending product:', error);
-      alert('Failed to remove trending product');
+      console.error("Error removing trending product:", error);
+      alert("Failed to remove trending product");
     }
   };
 
   // Featured Collections handlers
   const handleCollectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewCollection(prev => ({ ...prev, [name]: value }));
+    setNewCollection((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCollectionImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCollectionImagesChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      setNewCollection(prev => ({
+      setNewCollection((prev) => ({
         ...prev,
         images: [...prev.images, ...filesArray].slice(0, 4), // max 4 images
       }));
@@ -255,41 +274,45 @@ export const ManageContentPage: React.FC = () => {
   };
 
   const removeCollectionImage = (index: number) => {
-    setNewCollection(prev => ({
+    setNewCollection((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
   const submitFeaturedCollection = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCollection.title.trim() || newCollection.images.length === 0) {
-      alert('Please provide title and at least one image');
+      alert("Please provide title and at least one image");
       return;
     }
 
     setLoading(true);
-    const token = localStorage.getItem('aura-token') || localStorage.getItem('token');
-    console.log('Token from localStorage:', token ? 'Token exists' : 'No token found');
-    
+    const token =
+      localStorage.getItem("aura-token") || localStorage.getItem("token");
+    console.log(
+      "Token from localStorage:",
+      token ? "Token exists" : "No token found",
+    );
+
     if (!token) {
-      alert('Please login to add collection');
+      alert("Please login to add collection");
       setLoading(false);
       return;
     }
 
     // Test token validity first
     try {
-      const testResponse = await axios.get('http://localhost:5000/api/auth/verify', {
-        headers: { Authorization: `Bearer ${token}` }
+      const testResponse = await axios.get("/api/auth/verify", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Token is valid:', testResponse.data);
+      console.log("Token is valid:", testResponse.data);
     } catch (testError: any) {
-      console.error('Token validation failed:', testError.response?.status);
+      console.error("Token validation failed:", testError.response?.status);
       if (testError.response?.status === 401) {
-        alert('Your session has expired. Please login again.');
-        localStorage.removeItem('aura-token');
-        localStorage.removeItem('token');
+        alert("Your session has expired. Please login again.");
+        localStorage.removeItem("aura-token");
+        localStorage.removeItem("token");
         setLoading(false);
         return;
       }
@@ -298,43 +321,49 @@ export const ManageContentPage: React.FC = () => {
     try {
       const formData = new FormData();
       if (newCollection.name) {
-        formData.append('name', newCollection.name);
+        formData.append("name", newCollection.name);
       }
-      formData.append('title', newCollection.title);
-      formData.append('description', newCollection.description);
-      formData.append('link', newCollection.link);
-      formData.append('color', newCollection.color);
-      formData.append('type', newCollection.type);
+      formData.append("title", newCollection.title);
+      formData.append("description", newCollection.description);
+      formData.append("link", newCollection.link);
+      formData.append("color", newCollection.color);
+      formData.append("type", newCollection.type);
 
       newCollection.images.forEach((image) => {
-        formData.append('image', image);
+        formData.append("image", image);
       });
 
-      console.log('Sending request with token:', token.substring(0, 20) + '...');
-      
-      await axios.post('http://localhost:5000/api/featured-collections', formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+      console.log(
+        "Sending request with token:",
+        token.substring(0, 20) + "...",
+      );
+
+      await axios.post("/api/featured-collections", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      alert('Collection added successfully');
+      alert("Collection added successfully");
       setNewCollection({
-        name: '',
-        title: '',
-        description: 'Featured collection',
-        link: '/products',
-        color: 'from-pink-500 to-purple-600',
-        type: 'theme',
+        name: "",
+        title: "",
+        description: "Featured collection",
+        link: "/products",
+        color: "from-pink-500 to-purple-600",
+        type: "theme",
         images: [],
       });
       fetchData();
     } catch (error) {
-      console.error('Error adding collection:', error);
+      console.error("Error adding collection:", error);
       if (error.response?.status === 401) {
-        alert('Authentication failed. Please login again.');
-        localStorage.removeItem('aura-token');
-        window.location.href = '/team/login';
+        alert("Authentication failed. Please login again.");
+        localStorage.removeItem("aura-token");
+        window.location.href = "/team/login";
       } else {
-        alert('Failed to add collection');
+        alert("Failed to add collection");
       }
     } finally {
       setLoading(false);
@@ -342,65 +371,67 @@ export const ManageContentPage: React.FC = () => {
   };
 
   const deleteFeaturedCollection = async (id: string) => {
-    const token = localStorage.getItem('aura-token');
+    const token = localStorage.getItem("aura-token");
     if (!token) {
-      alert('Please login to delete collection');
+      alert("Please login to delete collection");
       return;
     }
-    if (!confirm('Are you sure you want to delete this collection?')) {
+    if (!confirm("Are you sure you want to delete this collection?")) {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/featured-collections/${id}`, {
+      await axios.delete(`/api/featured-collections/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Collection deleted successfully');
+      alert("Collection deleted successfully");
       fetchData();
     } catch (error) {
-      console.error('Error deleting collection:', error);
-      alert('Failed to delete collection');
+      console.error("Error deleting collection:", error);
+      alert("Failed to delete collection");
     }
   };
 
   return (
     <div className="p-6">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-8 text-gray-900">Manage Content</h2>
+        <h2 className="text-3xl font-bold mb-8 text-gray-900">
+          Manage Content
+        </h2>
 
         <div className="flex flex-wrap gap-1 mb-8 bg-gray-100 p-1 rounded-lg">
           <button
-            onClick={() => setActiveTab('testimonials')}
+            onClick={() => setActiveTab("testimonials")}
             className={`px-4 sm:px-6 py-3 rounded-md font-semibold transition-all text-sm sm:text-base ${
-              activeTab === 'testimonials'
-                ? 'bg-white text-pink-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+              activeTab === "testimonials"
+                ? "bg-white text-pink-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
             }`}
           >
             Testimonials
           </button>
           <button
-            onClick={() => setActiveTab('trending')}
+            onClick={() => setActiveTab("trending")}
             className={`px-4 sm:px-6 py-3 rounded-md font-semibold transition-all text-sm sm:text-base ${
-              activeTab === 'trending'
-                ? 'bg-white text-pink-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+              activeTab === "trending"
+                ? "bg-white text-pink-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
             }`}
           >
             Trending Products
           </button>
           <button
-            onClick={() => setActiveTab('featuredCollections')}
+            onClick={() => setActiveTab("featuredCollections")}
             className={`px-4 sm:px-6 py-3 rounded-md font-semibold transition-all text-sm sm:text-base ${
-              activeTab === 'featuredCollections'
-                ? 'bg-white text-pink-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+              activeTab === "featuredCollections"
+                ? "bg-white text-pink-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
             }`}
           >
             Featured Collections
           </button>
         </div>
 
-        {activeTab === 'testimonials' && (
+        {activeTab === "testimonials" && (
           <div className="space-y-8">
             {/* Add New Testimonial Form */}
             <div className="bg-white rounded-xl shadow-lg p-8">
@@ -425,13 +456,20 @@ export const ManageContentPage: React.FC = () => {
                         className="hidden"
                         id="testimonial-image"
                       />
-                      <label htmlFor="testimonial-image" className="cursor-pointer">
+                      <label
+                        htmlFor="testimonial-image"
+                        className="cursor-pointer"
+                      >
                         <div className="space-y-2">
                           <Upload className="h-8 w-8 text-gray-400 mx-auto" />
                           <p className="text-sm text-gray-600">
-                            {newTestimonial.image ? newTestimonial.image.name : 'Click to upload profile picture'}
+                            {newTestimonial.image
+                              ? newTestimonial.image.name
+                              : "Click to upload profile picture"}
                           </p>
-                          <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                          <p className="text-xs text-gray-500">
+                            PNG, JPG up to 10MB
+                          </p>
                         </div>
                       </label>
                     </div>
@@ -486,8 +524,8 @@ export const ManageContentPage: React.FC = () => {
                         <Star
                           className={`h-8 w-8 ${
                             star <= newTestimonial.rating
-                              ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
+                              ? "text-yellow-400 fill-current"
+                              : "text-gray-300"
                           }`}
                         />
                       </button>
@@ -521,7 +559,9 @@ export const ManageContentPage: React.FC = () => {
                 <div className="text-center py-12">
                   <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 text-lg">No testimonials yet</p>
-                  <p className="text-gray-400 text-sm">Add your first testimonial above</p>
+                  <p className="text-gray-400 text-sm">
+                    Add your first testimonial above
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -535,15 +575,20 @@ export const ManageContentPage: React.FC = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={`http://localhost:5000${testimonial.image}`}
+                            src={testimonial.image}
                             alt={testimonial.name}
                             className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                           />
                           <div>
-                            <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
+                            <h4 className="font-semibold text-gray-900">
+                              {testimonial.name}
+                            </h4>
                             <div className="flex items-center gap-1">
                               {[...Array(testimonial.rating)].map((_, i) => (
-                                <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                                <Star
+                                  key={i}
+                                  className="h-4 w-4 text-yellow-400 fill-current"
+                                />
                               ))}
                             </div>
                           </div>
@@ -556,7 +601,9 @@ export const ManageContentPage: React.FC = () => {
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">"{testimonial.text}"</p>
+                      <p className="text-gray-700 leading-relaxed">
+                        "{testimonial.text}"
+                      </p>
                     </motion.div>
                   ))}
                 </div>
@@ -565,16 +612,19 @@ export const ManageContentPage: React.FC = () => {
           </div>
         )}
 
-
-
-        {activeTab === 'trending' && (
+        {activeTab === "trending" && (
           <div className="space-y-8">
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-2xl font-bold mb-6 text-gray-900">Manage Trending Products</h3>
+              <h3 className="text-2xl font-bold mb-6 text-gray-900">
+                Manage Trending Products
+              </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {trendingProducts.map((product) => (
-                  <div key={product._id} className="border border-gray-200 rounded-lg p-4 relative">
+                  <div
+                    key={product._id}
+                    className="border border-gray-200 rounded-lg p-4 relative"
+                  >
                     <button
                       onClick={() => removeTrendingProduct(product._id)}
                       className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
@@ -584,13 +634,15 @@ export const ManageContentPage: React.FC = () => {
                     <div className="flex gap-4">
                       {product.primaryImage && (
                         <img
-                          src={`http://localhost:5000${product.primaryImage}`}
+                          src={product.primaryImage}
                           alt={product.name}
                           className="w-20 h-20 object-cover rounded-lg"
                         />
                       )}
                       <div>
-                        <h4 className="font-semibold text-gray-900">{product.name}</h4>
+                        <h4 className="font-semibold text-gray-900">
+                          {product.name}
+                        </h4>
                         <p className="text-gray-600">₹{product.price}</p>
                       </div>
                     </div>
@@ -598,13 +650,21 @@ export const ManageContentPage: React.FC = () => {
                 ))}
               </div>
 
-              <form onSubmit={submitTrendingProduct} className="space-y-4 max-w-md">
+              <form
+                onSubmit={submitTrendingProduct}
+                className="space-y-4 max-w-md"
+              >
                 <input
                   type="text"
                   name="productId"
                   placeholder="Product ID (from products collection)"
-                  value={newTrendingProduct.productId || ''}
-                  onChange={(e) => setNewTrendingProduct(prev => ({ ...prev, productId: e.target.value }))}
+                  value={newTrendingProduct.productId || ""}
+                  onChange={(e) =>
+                    setNewTrendingProduct((prev) => ({
+                      ...prev,
+                      productId: e.target.value,
+                    }))
+                  }
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300"
                 />
@@ -619,7 +679,7 @@ export const ManageContentPage: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'featuredCollections' && (
+        {activeTab === "featuredCollections" && (
           <div className="space-y-8">
             {/* Add New Featured Collection Form */}
             <div className="bg-white rounded-xl shadow-lg p-8">
@@ -692,7 +752,9 @@ export const ManageContentPage: React.FC = () => {
                     <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-pink-300 transition-colors">
                       <div className="text-center">
                         <Plus className="mx-auto h-8 w-8 text-gray-400" />
-                        <span className="text-sm text-gray-500">Add Images</span>
+                        <span className="text-sm text-gray-500">
+                          Add Images
+                        </span>
                       </div>
                       <input
                         type="file"
@@ -712,7 +774,7 @@ export const ManageContentPage: React.FC = () => {
                     disabled={loading}
                     className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-pink-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {loading ? 'Adding...' : 'Add Collection'}
+                    {loading ? "Adding..." : "Add Collection"}
                   </button>
                 </div>
               </form>
@@ -728,8 +790,12 @@ export const ManageContentPage: React.FC = () => {
               {featuredCollections.length === 0 ? (
                 <div className="text-center py-12">
                   <ImageIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">No featured collections yet</p>
-                  <p className="text-gray-400 text-sm">Add your first collection above</p>
+                  <p className="text-gray-500 text-lg">
+                    No featured collections yet
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Add your first collection above
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -742,13 +808,26 @@ export const ManageContentPage: React.FC = () => {
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-2">{collection.title}</h4>
-                          <p className="text-gray-600 text-sm mb-2">{collection.description}</p>
-                          <p className="text-xs text-gray-500">Type: <span className="capitalize">{collection.type}</span></p>
-                          <p className="text-xs text-gray-500">Link: {collection.link}</p>
+                          <h4 className="font-semibold text-gray-900 mb-2">
+                            {collection.title}
+                          </h4>
+                          <p className="text-gray-600 text-sm mb-2">
+                            {collection.description}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Type:{" "}
+                            <span className="capitalize">
+                              {collection.type}
+                            </span>
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Link: {collection.link}
+                          </p>
                         </div>
                         <button
-                          onClick={() => deleteFeaturedCollection(collection._id)}
+                          onClick={() =>
+                            deleteFeaturedCollection(collection._id)
+                          }
                           className="text-red-500 hover:text-red-700 p-1 rounded transition-colors ml-2"
                           title="Delete collection"
                         >
@@ -757,7 +836,7 @@ export const ManageContentPage: React.FC = () => {
                       </div>
                       {collection.image && (
                         <img
-                          src={`http://localhost:5000${collection.image}`}
+                          src={collection.image}
                           alt={collection.title}
                           className="w-full h-32 object-cover rounded-lg"
                         />

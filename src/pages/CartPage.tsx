@@ -25,7 +25,7 @@ export const CartPage: React.FC = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="bg-white rounded-lg shadow p-6 flex items-center gap-4"
                             >
-                                <img src={`http://localhost:5000${item.primaryImage}`} alt={item.name} className="w-20 h-20 object-cover rounded" />
+                                <img src={item.primaryImage} alt={item.name} className="w-20 h-20 object-cover rounded" />
                                 <div className="flex-1">
                                     <h3 className="font-semibold text-gray-900">{item.name}</h3>
                                     <p className="text-pink-600 font-medium">₹{item.price}</p>

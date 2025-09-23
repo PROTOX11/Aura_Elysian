@@ -51,7 +51,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/cart', {
+      const response = await axios.get('/api/cart', {
         headers: { Authorization: `Bearer ${token}` },
         validateStatus: () => true, // Don't throw for any status
       });
@@ -106,7 +106,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       });
       
       const response = await axios.put(
-        'http://localhost:5000/api/cart',
+        '/api/cart',
         { productId, quantity },
         {
           headers: { Authorization: `Bearer ${token}` },

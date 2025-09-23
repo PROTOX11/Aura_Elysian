@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Heart, Star, Plus, Minus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ImageWithLoading } from './ImageWithLoading';
+import { imageCacheService } from '../services/imageCacheService';
 
 interface Product {
   id: string;
@@ -33,6 +34,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [currentQuantity, setCurrentQuantity] = useState(quantity);
   const [isInView, setIsInView] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -41,10 +43,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   }, [quantity]);
 
   useEffect(() => {
+    // Check if image is already cached
+    if (imageCacheService.isImageLoaded(product.primaryImage)) {
+      setImageLoaded(true);
+      setIsInView(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsInView(true);
+          // Preload the image when it comes into view
+          imageCacheService.preloadImage(product.primaryImage).then(() => {
+            setImageLoaded(true);
+          }).catch(() => {
+            setImageLoaded(false);
+          });
           observer.disconnect();
         }
       },
@@ -56,7 +71,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [product.primaryImage]);
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -123,6 +138,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               showSuccessPopup={false}
               containerClassName="w-full h-full"
+              priority={false}
+              lazy={false}
             />
           )}
         </div>

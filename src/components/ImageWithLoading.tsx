@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, X } from 'lucide-react';
+import { imageCacheService } from '../services/imageCacheService';
 
 interface ImageWithLoadingProps {
   src: string;
@@ -37,7 +38,24 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    // Reset states when src changes
+    // Check if image is already cached
+    if (imageCacheService.isImageLoaded(src)) {
+      setLoading(false);
+      setImageLoaded(true);
+      setError(false);
+      setShowSuccess(false);
+      return;
+    }
+
+    if (imageCacheService.isImageError(src)) {
+      setLoading(false);
+      setError(true);
+      setImageLoaded(false);
+      setShowSuccess(false);
+      return;
+    }
+
+    // Reset states when src changes and not cached
     setLoading(true);
     setError(false);
     setImageLoaded(false);

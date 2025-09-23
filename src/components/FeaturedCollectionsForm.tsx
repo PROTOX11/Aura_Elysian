@@ -42,7 +42,7 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
 
   const fetchCollections = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/featured-collections');
+      const response = await axios.get('/api/featured-collections');
       setCollections(response.data);
     } catch (error) {
       console.error('Error fetching collections:', error);
@@ -59,7 +59,7 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/featured-collections/${id}`, {
+      await axios.delete(`/api/featured-collections/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert('Collection deleted successfully');
@@ -98,7 +98,7 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
         formData.append('image', image);
       });
 
-      await axios.post('http://localhost:5000/api/featured-collections', formData, {
+      await axios.post('/api/featured-collections', formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
 
@@ -241,7 +241,7 @@ export const FeaturedCollectionsForm: React.FC<FeaturedCollectionsFormProps> = (
                 <p>Color: {collection.color}</p>
                 {collection.image && (
                   <img
-                    src={`http://localhost:5000${collection.image}`}
+                    src={collection.image}
                     alt={collection.title}
                     className="w-32 h-32 mt-2"
                   />

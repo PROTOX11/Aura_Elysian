@@ -5,6 +5,7 @@ import { Star, ShoppingCart, ArrowLeft } from 'lucide-react';
 
 import { useCart } from '../context/CartContext';
 import { ImageWithLoading } from '../components/ImageWithLoading';
+import { imageCacheService } from '../services/imageCacheService';
 
 interface Product {
   _id: string;
@@ -56,8 +57,6 @@ const CandleDetailsPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [currentMainImage, setCurrentMainImage] = useState<string | null>(null);
-  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
-  const [imageLoadStatus, setImageLoadStatus] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
 
 
 

@@ -39,28 +39,15 @@ export const SignupPage: React.FC = () => {
                 throw new Error(data.message || 'Signup failed');
             }
 
-            // Redirect to login page on successful signup
-            navigate('/login');
-        } catch (err: any) {
-            setError(err.message);
-        }
+            const { token } = await response.json();
 
-        try {
-            const response = await fetch('http://localhost:5000/api/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password }),
-            });
+            // Store token for automatic login
+            localStorage.setItem('token', token);
 
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Signup failed');
-            }
-
-            // Redirect to login page on successful signup
-            navigate('/login');
-        } catch (err: any) {
-            setError(err.message);
+            // Redirect to homepage after successful signup and login
+            navigate('/');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
         }
     };
 

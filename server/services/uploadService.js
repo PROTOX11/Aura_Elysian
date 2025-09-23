@@ -36,7 +36,7 @@ const localStorage = multer.diskStorage({
     } else if (url.includes('products')) {
       subDir = 'products';
     }
-    const uploadPath = path.join(process.cwd(), 'server', 'uploads', subDir);
+    const uploadPath = path.join(process.cwd(), 'uploads', subDir);
     // Ensure directory exists
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });

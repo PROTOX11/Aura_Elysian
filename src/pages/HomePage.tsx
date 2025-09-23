@@ -47,13 +47,16 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const productsRes = await axios.get('http://localhost:5000/api/trending-products');
-        setFeaturedProducts(productsRes.data.map((p: { _id: string } & Product) => ({ ...p, id: p._id })));
+        const productsRes = await axios.get('/api/trending-products');
+        setFeaturedProducts(productsRes.data.map((p: { _id: string; productId?: string } & Product) => ({
+          ...p,
+          id: p.productId || p._id // Use productId if available, otherwise use _id
+        })));
 
-        const testimonialsRes = await axios.get('http://localhost:5000/api/testimonials');
+        const testimonialsRes = await axios.get('/api/testimonials');
         setTestimonials(testimonialsRes.data);
 
-        const collectionsRes = await axios.get('http://localhost:5000/api/featured-collections');
+        const collectionsRes = await axios.get('/api/featured-collections');
         setFeaturedCollections(collectionsRes.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -126,7 +129,7 @@ export const HomePage: React.FC = () => {
                 className="relative overflow-hidden rounded-lg group-hover:scale-105 transition-transform duration-300"
               >
                 <img
-                  src={`http://localhost:5000${image}`}
+                  src={image}
                   alt={`${collection.title} - Image ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
@@ -526,7 +529,7 @@ export const HomePage: React.FC = () => {
 
                 {/* Review Content */}
                 <p className="text-gray-700 mb-4 leading-relaxed text-base">
-                  "{testimonial.text}"
+                  {testimonial.text}
                 </p>
 
                 {/* Rating Stars */}
@@ -539,7 +542,7 @@ export const HomePage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <img
-                      src={`http://localhost:5000${testimonial.image}`}
+                      src={testimonial.image}
                       alt={testimonial.name}
                       className="w-10 h-10 rounded-full object-cover ring-2 ring-pink-100"
                     />
