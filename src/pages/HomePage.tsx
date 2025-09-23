@@ -182,7 +182,7 @@ export const HomePage: React.FC = () => {
           </p>
 
           <Link
-            to={collection.link}
+            to={`${collection.link}?collection=${encodeURIComponent(collection.title)}`}
             className={`inline-flex items-center gap-2 bg-gradient-to-r ${collection.color} px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
           >
             Explore

@@ -30,6 +30,7 @@ interface FilterContextType {
   updateFilterState: (newState: Partial<FilterState>) => void;
   refreshFilters: () => Promise<void>;
   resetFilters: () => void;
+  applyCollectionFilter: (collectionTitle: string) => void;
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -103,6 +104,65 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
     }
   };
 
+  const applyCollectionFilter = (collectionTitle: string) => {
+    if (!filterOptions) return;
+
+    const title = collectionTitle.toLowerCase().trim();
+
+    // Check if title matches any festival
+    const matchingFestival = filterOptions.festivals.find(festival =>
+      festival.toLowerCase().includes(title) || title.includes(festival.toLowerCase())
+    );
+
+    // Check if title matches any fragrance
+    const matchingFragrance = filterOptions.fragrances.find(fragrance =>
+      fragrance.toLowerCase().includes(title) || title.includes(fragrance.toLowerCase())
+    );
+
+    // Check if title matches any theme
+    const matchingTheme = filterOptions.themes.find(theme =>
+      theme.toLowerCase().includes(title) || title.includes(theme.toLowerCase())
+    );
+
+    // Check if title matches any weight
+    const matchingWeight = filterOptions.weights.find(weight =>
+      weight.toLowerCase().includes(title) || title.includes(weight.toLowerCase())
+    );
+
+    // Check if title matches any category
+    const matchingCategory = filterOptions.categories.find(category =>
+      category.toLowerCase().includes(title) || title.includes(category.toLowerCase())
+    );
+
+    // Apply the first match found
+    if (matchingFestival) {
+      setFilterState(prev => ({
+        ...prev,
+        selectedFestivals: [matchingFestival]
+      }));
+    } else if (matchingFragrance) {
+      setFilterState(prev => ({
+        ...prev,
+        selectedFragrances: [matchingFragrance]
+      }));
+    } else if (matchingTheme) {
+      setFilterState(prev => ({
+        ...prev,
+        selectedThemes: [matchingTheme]
+      }));
+    } else if (matchingWeight) {
+      setFilterState(prev => ({
+        ...prev,
+        selectedWeights: [matchingWeight]
+      }));
+    } else if (matchingCategory) {
+      setFilterState(prev => ({
+        ...prev,
+        selectedCategories: [matchingCategory]
+      }));
+    }
+  };
+
   useEffect(() => {
     fetchFilterOptions();
   }, []);
@@ -115,6 +175,7 @@ export const FilterProvider: React.FC<FilterProviderProps> = ({ children }) => {
     updateFilterState,
     refreshFilters,
     resetFilters,
+    applyCollectionFilter,
   };
 
   return (

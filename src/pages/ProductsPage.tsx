@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Filter, Grid, List, SlidersHorizontal, X, RotateCcw } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
@@ -27,7 +27,7 @@ export const ProductsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { cart, updateCartItemQuantity } = useCart();
-  const { filterOptions, filterState, updateFilterState, resetFilters, loading: filterLoading } = useFilters();
+  const { filterOptions, filterState, updateFilterState, resetFilters, loading: filterLoading, applyCollectionFilter } = useFilters();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -60,6 +60,16 @@ export const ProductsPage: React.FC = () => {
     };
     fetchProducts();
   }, []);
+
+  // Apply collection filter from URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const collectionTitle = urlParams.get('collection');
+
+    if (collectionTitle && filterOptions && !filterLoading) {
+      applyCollectionFilter(collectionTitle);
+    }
+  }, [location.search, filterOptions, filterLoading, applyCollectionFilter]);
 
   // Filter products based on current filter state
   const { filteredProducts } = useProductFilters(allProducts);
@@ -149,7 +159,7 @@ export const ProductsPage: React.FC = () => {
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
-          <div className={`lg:w-64 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+          <div className={`lg:w-64 ${showFilters ? 'block' : 'hidden'}`}>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -276,7 +286,7 @@ export const ProductsPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="lg:hidden flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                    className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                   >
                     <SlidersHorizontal className="h-4 w-4" />
                     Filters
