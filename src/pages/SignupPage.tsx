@@ -21,17 +21,17 @@ export const SignupPage: React.FC = () => {
         setError('');
 
         try {
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('email', email);
-            formData.append('password', password);
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-
+            // Send JSON data for signup (without image for now)
             const response = await fetch('http://localhost:5000/api/signup', {
                 method: 'POST',
-                body: formData,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                }),
             });
 
             if (!response.ok) {
@@ -39,14 +39,21 @@ export const SignupPage: React.FC = () => {
                 throw new Error(data.message || 'Signup failed');
             }
 
-            const { token } = await response.json();
+            const data = await response.json();
+            console.log('Signup response:', data);
+            
+            const { result, token } = data;
+            console.log('Signup successful:', result);
+            console.log('Token received:', token ? 'Yes' : 'No');
 
             // Store token for automatic login
             localStorage.setItem('token', token);
+            console.log('Token stored in localStorage');
 
             // Redirect to homepage after successful signup and login
             navigate('/');
         } catch (err: unknown) {
+            console.error('Signup error:', err);
             setError(err instanceof Error ? err.message : 'An error occurred');
         }
     };

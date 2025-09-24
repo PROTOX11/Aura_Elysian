@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { auth } from '../middleware/auth.js';
 import User from '../models/User.js';
 import { upload, uploadSingleImage } from '../services/uploadService.js';
@@ -97,7 +98,21 @@ router.post('/signup', upload.single('image'), async (req, res) => {
     const newUser = new User(newUserData);
     await newUser.save();
 
-    res.status(201).json({ message: 'User created successfully' });
+    // Generate JWT token for automatic login
+    const token = jwt.sign(
+      { email: newUser.email, id: newUser._id },
+      process.env.JWT_SECRET || "test",
+      { expiresIn: "1h" }
+    );
+
+    console.log("User created successfully:", newUser.email);
+    console.log("Token generated:", token ? "Yes" : "No");
+
+    res.status(201).json({ 
+      message: 'User created successfully',
+      result: newUser,
+      token: token
+    });
   } catch (error) {
     console.error('Error during signup:', error.stack || error);
     res.status(500).json({ message: 'Server error' });

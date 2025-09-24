@@ -32,7 +32,10 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
+    console.log('ProfilePage - Token from localStorage:', token ? 'Found' : 'Not found');
+    console.log('ProfilePage - Token value:', token);
     if (!token) {
+      console.log('ProfilePage - No token found, redirecting to login');
       navigate('/login');
       return;
     }

@@ -712,6 +712,20 @@ app.get("/api/auth/verify", auth, (req, res) => {
   });
 });
 
+// Profile endpoint
+app.get("/api/profile", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ user });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ message: "Failed to fetch profile" });
+  }
+});
+
 app.post(
   "/api/featured-collections",
   auth,
@@ -941,36 +955,7 @@ app.post("/api/team/login", async (req, res) => {
   }
 });
 
-// General User Routes
-app.post("/api/signup", async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      console.log("User already exists:", email);
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    // Store password as plain text (insecure)
-    const result = await User.create({ name, email, password });
-    console.log("New user created successfully:", result.email);
-
-    // Generate JWT token for automatic login
-    const token = jwt.sign(
-      { email: result.email, id: result._id },
-      process.env.JWT_SECRET || "test",
-      { expiresIn: "1h" },
-    );
-
-    res.status(201).json({ result, token });
-  } catch (error) {
-    console.error("Error during signup:", error);
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-    res.status(500).json({ message: "Something went wrong" });
-  }
-});
+// General User Routes - signup is handled in routes/user.js
 
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
