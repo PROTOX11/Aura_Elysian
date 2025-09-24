@@ -1,49 +1,66 @@
-import React, { useState, useCallback, memo } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Instagram, Youtube, Heart, Star, CheckCircle, AlertCircle } from 'lucide-react';
-import { Logo } from './Logo';
-import { brevoService, BrevoSubscriptionResponse } from '../services/brevoService';
+import React, { useState, useCallback, memo } from "react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Instagram,
+  Youtube,
+  Heart,
+  Star,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { Logo } from "./Logo";
+import {
+  brevoService,
+  BrevoSubscriptionResponse,
+} from "../services/brevoService";
 
 const Footer: React.FC = memo(() => {
   const currentYear = new Date().getFullYear();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
-    type: 'success' | 'error' | null;
+    type: "success" | "error" | null;
     message: string;
-  }>({ type: null, message: '' });
+  }>({ type: null, message: "" });
 
-  const handleSubscribe = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
+  const handleSubscribe = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!email.trim()) return;
 
-    setIsSubmitting(true);
-    setSubscriptionStatus({ type: null, message: '' });
+      setIsSubmitting(true);
+      setSubscriptionStatus({ type: null, message: "" });
 
-    try {
-      const result: BrevoSubscriptionResponse = await brevoService.subscribeEmail(email.trim());
-      
-      if (result.success) {
-        setSubscriptionStatus({ type: 'success', message: result.message });
-        setEmail(''); // Clear the input on success
-      } else {
-        setSubscriptionStatus({ type: 'error', message: result.message });
+      try {
+        const result: BrevoSubscriptionResponse =
+          await brevoService.subscribeEmail(email.trim());
+
+        if (result.success) {
+          setSubscriptionStatus({ type: "success", message: result.message });
+          setEmail(""); // Clear the input on success
+        } else {
+          setSubscriptionStatus({ type: "error", message: result.message });
+        }
+      } catch (error) {
+        console.error("Subscription error:", error);
+        setSubscriptionStatus({
+          type: "error",
+          message: "An unexpected error occurred. Please try again later.",
+        });
+      } finally {
+        setIsSubmitting(false);
+
+        // Auto-hide the status message after 5 seconds
+        setTimeout(() => {
+          setSubscriptionStatus({ type: null, message: "" });
+        }, 5000);
       }
-    } catch (error) {
-      console.error('Subscription error:', error);
-      setSubscriptionStatus({ 
-        type: 'error', 
-        message: 'An unexpected error occurred. Please try again later.' 
-      });
-    } finally {
-      setIsSubmitting(false);
-      
-      // Auto-hide the status message after 5 seconds
-      setTimeout(() => {
-        setSubscriptionStatus({ type: null, message: '' });
-      }, 5000);
-    }
-  }, [email]);
+    },
+    [email],
+  );
 
   return (
     <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 mt-auto">
@@ -52,7 +69,7 @@ const Footer: React.FC = memo(() => {
         {/* Decorative elements */}
         <div className="absolute inset-0 bg-gradient-to-r from-pink-100/20 via-purple-100/20 to-amber-100/20"></div>
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-400 via-purple-400 to-amber-400"></div>
- 
+
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -70,29 +87,53 @@ const Footer: React.FC = memo(() => {
                 <Star className="h-5 w-5 text-pink-500" />
               </div>
               <p className="text-base text-gray-600 max-w-md">
-                Get special offers and new product launches delivered to your inbox.
+                Get special offers and new product launches delivered to your
+                inbox.
               </p>
             </div>
 
             <form onSubmit={handleSubscribe} className="w-full lg:w-auto">
-              <div className="flex flex-col sm:flex-row gap-3 max-w-md lg:max-w-none">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="flex-1 px-4 py-3 rounded-full border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 text-sm placeholder-gray-400 transition-all duration-200"
-                />
-                <motion.button
-                  type="submit"
-                  disabled={isSubmitting}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  {isSubmitting ? 'Subscribing...' : 'Subscribe'}
-                </motion.button>
+              <div className="flex flex-col gap-3 max-w-md lg:max-w-none">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="flex-1 px-4 py-3 rounded-full border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300 text-sm placeholder-gray-400 transition-all duration-200"
+                  />
+                  <motion.button
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {isSubmitting ? "Subscribing..." : "Subscribe"}
+                  </motion.button>
+                </div>
+
+                {/* Status Message */}
+                {subscriptionStatus.type && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
+                      subscriptionStatus.type === 'success'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}
+                  >
+                    {subscriptionStatus.type === 'success' ? (
+                      <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    )}
+                    <span>{subscriptionStatus.message}</span>
+                  </motion.div>
+                )}
               </div>
             </form>
           </motion.div>
@@ -106,21 +147,32 @@ const Footer: React.FC = memo(() => {
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-gray-900">Aura Elysian</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Crafting beautiful, handcrafted candles to illuminate your space with elegance and serenity.
+              Crafting beautiful, handcrafted candles to illuminate your space
+              with elegance and serenity.
             </p>
-            
+
             {/* Contact Info with Logo */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-gray-900 text-sm">Get in Touch</h4>
+                <h4 className="font-semibold text-gray-900 text-sm">
+                  Get in Touch
+                </h4>
                 <Logo className="h-6 w-6" showText={true} />
               </div>
-              
+
               {/* Social Media Icons */}
               <div className="flex gap-2 mb-3">
                 {[
-                  { href: 'https://www.instagram.com/auraelysian_1/?hl=en', icon: Instagram, label: 'Instagram' },
-                  { href: 'https://www.youtube.com/channel/UC55z6Gz-o0lqTsX2QVQEdTA', icon: Youtube, label: 'YouTube' }
+                  {
+                    href: "https://www.instagram.com/auraelysian_1/?hl=en",
+                    icon: Instagram,
+                    label: "Instagram",
+                  },
+                  {
+                    href: "https://www.youtube.com/channel/UC55z6Gz-o0lqTsX2QVQEdTA",
+                    icon: Youtube,
+                    label: "YouTube",
+                  },
                 ].map(({ href, icon: Icon, label }) => (
                   <motion.a
                     key={label}
@@ -136,7 +188,7 @@ const Footer: React.FC = memo(() => {
                   </motion.a>
                 ))}
               </div>
-              
+
               <div className="space-y-2">
                 <motion.a
                   href="mailto:info@auraelysian.com"
@@ -166,7 +218,9 @@ const Footer: React.FC = memo(() => {
                   <div className="p-1.5 bg-pink-50 rounded group-hover:bg-pink-100 transition-colors">
                     <MapPin className="h-3 w-3" />
                   </div>
-                  <span className="text-xs">Om vihar phase 1, Uttam nagar west, New Delhi</span>
+                  <span className="text-xs">
+                    Om vihar phase 1, Uttam nagar west, New Delhi
+                  </span>
                 </motion.a>
               </div>
             </div>
@@ -175,13 +229,15 @@ const Footer: React.FC = memo(() => {
           {/* Legal - Right */}
           <div className="space-y-4">
             <div>
-              <h4 className="font-semibold text-gray-900 text-sm mb-2">Legal</h4>
+              <h4 className="font-semibold text-gray-900 text-sm mb-2">
+                Legal
+              </h4>
               <div className="space-y-1">
                 {[
-                  { href: '/legal', label: 'Privacy Policy' },
-                  { href: '/legal', label: 'Terms of Service' },
-                  { href: '/legal', label: 'Return Policy' },
-                  { href: '/legal', label: 'Contact Us' }
+                  { href: "/legal", label: "Privacy Policy" },
+                  { href: "/legal", label: "Terms of Service" },
+                  { href: "/legal", label: "Return Policy" },
+                  { href: "/legal", label: "Contact Us" },
                 ].map((link, index) => (
                   <motion.a
                     key={`${link.href}-${index}`}
@@ -215,6 +271,6 @@ const Footer: React.FC = memo(() => {
   );
 });
 
-Footer.displayName = 'Footer';
+Footer.displayName = "Footer";
 
 export { Footer };

@@ -27,10 +27,16 @@ app.use("/uploads", express.static("uploads"));
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(
-      process.env.MONGO_URI || "mongodb://127.0.0.1:27017/Aura_Elysian",
-    );
-    console.log("✅ MongoDB connected");
+    const mongoUri =
+      process.env.MONGO_URI ||
+      "mongodb+srv://prakashstorage002_db_user:op7BpfMsDPmcVjVQ@auraelysian.fnvsboe.mongodb.net/Aura_Elysian?retryWrites=true&w=majority&appName=AuraElysian";
+    console.log("🔗 Connecting to MongoDB Atlas...");
+    console.log(
+      "📍 Connection URI:",
+      mongoUri.replace(/\/\/.*@/, "//***:***@"),
+    ); // Hide credentials in log
+    await mongoose.connect(mongoUri);
+    console.log("✅ MongoDB Atlas connected successfully");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
@@ -276,11 +282,7 @@ app.post("/api/products", auth, upload.array("images", 5), async (req, res) => {
         imageUrls = await Promise.all(
           req.files.map(async (file) => {
             // Create upload directory if it doesn't exist
-            const uploadDir = path.join(
-              process.cwd(),
-              "uploads",
-              "products",
-            );
+            const uploadDir = path.join(process.cwd(), "uploads", "products");
 
             if (!fs.existsSync(uploadDir)) {
               fs.mkdirSync(uploadDir, { recursive: true });
@@ -944,21 +946,28 @@ app.post("/api/signup", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
+      console.log("User already exists:", email);
       return res.status(400).json({ message: "User already exists" });
+    }
+
     // Store password as plain text (insecure)
     const result = await User.create({ name, email, password });
+    console.log("New user created successfully:", result.email);
 
     // Generate JWT token for automatic login
     const token = jwt.sign(
       { email: result.email, id: result._id },
       process.env.JWT_SECRET || "test",
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     res.status(201).json({ result, token });
   } catch (error) {
-    console.error(error);
+    console.error("Error during signup:", error);
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "User already exists" });
+    }
     res.status(500).json({ message: "Something went wrong" });
   }
 });

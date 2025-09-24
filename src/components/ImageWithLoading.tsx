@@ -169,7 +169,7 @@ const ImageWithLoadingComponent: React.FC<ImageWithLoadingProps> = ({
         className={`${className} ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}
         loading={priority ? "eager" : (lazy ? "lazy" : "eager")}
         decoding="async"
-        fetchPriority={priority ? "high" : "auto"}
+        fetchpriority={priority ? "high" : "auto"}
       />
 
       {/* Success Popup */}
