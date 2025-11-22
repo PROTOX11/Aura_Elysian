@@ -15,6 +15,7 @@ interface CartContextType {
   loading: boolean;
   updateCartItemQuantity: (productId: string, quantity: number) => void;
   getCartCount: () => number;
+  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -87,15 +88,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
     try {
       // Optimistic update
-      setCart(prevCart => {
-        const itemIndex = prevCart.findIndex(item => item.productId === productId);
+      setCart((prevCart) => {
+        const itemIndex = prevCart.findIndex((item) => item.productId === productId);
         if (itemIndex > -1) {
           if (quantity > 0) {
             const updatedCart = [...prevCart];
             updatedCart[itemIndex] = { ...updatedCart[itemIndex], quantity };
             return updatedCart;
           } else {
-            return prevCart.filter(item => item.productId !== productId);
+            return prevCart.filter((item) => item.productId !== productId);
           }
         } else if (quantity > 0) {
           // Add new item to cart optimistically
@@ -104,7 +105,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }
         return prevCart;
       });
-      
+
       const response = await axios.put(
         '/api/cart',
         { productId, quantity },
@@ -130,13 +131,36 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       fetchCart();
     }
   };
+
+  const clearCart = async () => {
+    const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
+    if (!token) return;
+    try {
+      setCart([]);
+      // Delete all items in user's cart on backend
+      // Assuming API to clear cart is PUT /api/cart with each product quantity=0
+      // Need to get current cart items and send quantity=0 for each
+      const deleteRequests = cart.map(item =>
+        axios.put(
+          '/api/cart',
+          { productId: item.productId, quantity: 0 },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      await Promise.all(deleteRequests);
+      fetchCart();
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      fetchCart();
+    }
+  };
   
   const getCartCount = () => {
     return cart.reduce((count, item) => count + item.quantity, 0);
   };
 
   return (
-    <CartContext.Provider value={{ cart, loading, updateCartItemQuantity, getCartCount }}>
+    <CartContext.Provider value={{ cart, loading, updateCartItemQuantity, getCartCount, clearCart }}>
       {children}
     </CartContext.Provider>
   );

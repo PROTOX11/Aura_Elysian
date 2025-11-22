@@ -129,10 +129,13 @@ const FeaturedCollection = mongoose.model(
 import { auth } from "./middleware/auth.js";
 import userRoutes from "./routes/user.js";
 import uploadRoutes from "./routes/upload.js";
+import orderRoutes from "./routes/order.js";
+
 
 // Routes
 app.use("/api", userRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api", orderRoutes);
 
 app.get("/api/products", async (req, res) => {
   const { limit } = req.query;

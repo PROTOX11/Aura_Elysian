@@ -18,6 +18,7 @@ import { LegalPage } from './pages/LegalPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { CartProvider } from './context/CartContext';
 import { FilterProvider } from './context/FilterContext';
+import OrderHistoryPage from './pages/OrderHistoryPage';
 
 function App() {
 
@@ -41,6 +42,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/liked" element={<LikedProductsPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/orders" element={<OrderHistoryPage />} />
               <Route path="/legal" element={<LegalPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/team" element={<TeamPage />} />
