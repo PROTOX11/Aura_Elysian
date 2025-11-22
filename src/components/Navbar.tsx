@@ -124,13 +124,9 @@ export const Navbar: React.FC = () => {
             >
               <Link
                 to="/liked"
-                className="relative p-3 text-gray-700 hover:text-pink-600 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 rounded-full transition-all duration-300 group"
+                className="p-3 text-gray-700 hover:text-pink-600 rounded-full transition-all duration-300"
               >
-                <Heart className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full opacity-0 group-hover:opacity-100"
-                  transition={{ duration: 0.2 }}
-                />
+                <Heart className="h-5 w-5 transition-transform duration-200 hover:scale-110" />
               </Link>
             </motion.div>
 
@@ -140,20 +136,9 @@ export const Navbar: React.FC = () => {
             >
               <Link
                 to="/cart"
-                className="relative p-3 text-gray-700 hover:text-pink-600 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 rounded-full transition-all duration-300 group"
+                className="p-3 text-gray-700 hover:text-pink-600 rounded-full transition-all duration-300"
               >
-                <ShoppingBag className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                <motion.span
-                  className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center shadow-lg"
-                  animate={{ scale: getCartCount() > 0 ? [1, 1.2, 1] : 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {getCartCount()}
-                </motion.span>
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full opacity-0 group-hover:opacity-100"
-                  transition={{ duration: 0.2 }}
-                />
+                <ShoppingBag className="h-5 w-5 transition-transform duration-200 hover:scale-110" />
               </Link>
             </motion.div>
 
@@ -163,13 +148,9 @@ export const Navbar: React.FC = () => {
             >
               <Link
                 to="/profile"
-                className="relative p-3 text-gray-700 hover:text-pink-600 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 rounded-full transition-all duration-300 group"
+                className="p-3 text-gray-700 hover:text-pink-600 rounded-full transition-all duration-300"
               >
-                <User className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full opacity-0 group-hover:opacity-100"
-                  transition={{ duration: 0.2 }}
-                />
+                <User className="h-5 w-5 transition-transform duration-200 hover:scale-110" />
               </Link>
             </motion.div>
           </div>

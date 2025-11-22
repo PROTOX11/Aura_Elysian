@@ -43,7 +43,7 @@ export const ProfilePage: React.FC = () => {
     // Fetch user profile from API
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/profile', {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -86,7 +86,7 @@ export const ProfilePage: React.FC = () => {
   const handleSaveMobile = async () => {
     const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
     try {
-      const response = await fetch('http://localhost:5000/api/profile', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export const ProfilePage: React.FC = () => {
   const handleSaveAddress = async () => {
     const token = localStorage.getItem('token') || localStorage.getItem('aura-token');
     try {
-      const response = await fetch('http://localhost:5000/api/profile', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +151,7 @@ export const ProfilePage: React.FC = () => {
       const formData = new FormData();
       formData.append('image', imageFile);
 
-      const response = await fetch('http://localhost:5000/api/profile', {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

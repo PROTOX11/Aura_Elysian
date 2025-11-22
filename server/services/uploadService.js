@@ -5,7 +5,7 @@ import fs from 'fs';
 
 // Configure multer for memory storage (for Cloudinary uploads)
 const memoryStorage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage: memoryStorage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
@@ -121,7 +121,7 @@ const getOptimizedImageUrl = (publicId, options = {}) => {
     height: options.height || 'auto',
     crop: options.crop || 'limit'
   };
-  
+
   return cloudinary.url(publicId, defaultOptions);
 };
 

@@ -51,7 +51,7 @@ const CustomOrderPage: React.FC = () => {
     if (referenceLink) formData.append('referenceLink', referenceLink);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/custom-orders', formData, {
+      const response = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/custom-orders`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,

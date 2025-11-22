@@ -19,7 +19,7 @@ export const LoginPage: React.FC = () => {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/login', {
+            const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
@@ -116,14 +116,6 @@ export const LoginPage: React.FC = () => {
                             Don't have an account?{' '}
                             <Link to="/signup" className="font-semibold text-purple-600 hover:text-purple-800 transition-colors">
                                 Sign Up
-                            </Link>
-                        </p>
-                    </motion.div>
-                    <motion.div variants={fadeInUp} className="text-center mt-8">
-                        <p className="text-gray-600">
-                            Aura teams Login here{' '}
-                            <Link to="/team" className="font-semibold text-purple-600 hover:text-purple-800 transition-colors">
-                                Log In
                             </Link>
                         </p>
                     </motion.div>
