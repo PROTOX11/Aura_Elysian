@@ -66,9 +66,6 @@ export const ProfilePage: React.FC = () => {
 
     // Mock orders data - in real app, fetch from API
     setOrders([
-      { id: 'ORD-001', date: '2024-01-15', status: 'Delivered', total: 89.99, items: 2 },
-      { id: 'ORD-002', date: '2024-01-10', status: 'Shipped', total: 45.50, items: 1 },
-      { id: 'ORD-003', date: '2024-01-05', status: 'Processing', total: 120.00, items: 3 },
     ]);
   }, [navigate]);
 
