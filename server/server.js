@@ -28,8 +28,7 @@ app.use("/uploads", express.static("uploads"));
 const connectDB = async () => {
   try {
     const mongoUri =
-      process.env.MONGO_URI ||
-      "mongodb+srv://prakashstorage002_db_user:op7BpfMsDPmcVjVQ@auraelysian.fnvsboe.mongodb.net/Aura_Elysian?retryWrites=true&w=majority&appName=AuraElysian";
+      process.env.MONGO_URI;
     console.log("🔗 Connecting to MongoDB Atlas...");
     console.log(
       "📍 Connection URI:",
