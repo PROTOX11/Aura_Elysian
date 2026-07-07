@@ -27,17 +27,18 @@ app.use("/uploads", express.static("uploads"));
 // MongoDB Connection
 const connectDB = async () => {
   try {
-    const mongoUri =
-      process.env.MONGO_URI;
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    if (!mongoUri) {
+      throw new Error(
+        "Missing MongoDB URI. Set MONGO_URI (or MONGODB_URI) in server/.env",
+      );
+    }
     console.log("🔗 Connecting to MongoDB Atlas...");
-    console.log(
-      "📍 Connection URI:",
-      mongoUri.replace(/\/\/.*@/, "//***:***@"),
-    ); // Hide credentials in log
+    console.log("📍 Connection URI:", mongoUri.replace(/\/\/.*@/, "//***:***@"));
     await mongoose.connect(mongoUri);
     console.log("✅ MongoDB Atlas connected successfully");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err.message || err);
     process.exit(1);
   }
 };
@@ -73,7 +74,7 @@ const productSchema = new mongoose.Schema({
   description: String,
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "AuraUser" },
 });
-const Product = mongoose.model("Product", productSchema);
+const Product = mongoose.models.Product || mongoose.model("Product", productSchema);
 
 const testimonialSchema = new mongoose.Schema({
   name: String,
@@ -87,7 +88,7 @@ const testimonialSchema = new mongoose.Schema({
     required: false,
   },
 });
-const Testimonial = mongoose.model("Testimonial", testimonialSchema);
+const Testimonial = mongoose.models.Testimonial || mongoose.model("Testimonial", testimonialSchema);
 
 const productReviewSchema = new mongoose.Schema({
   name: String,
@@ -120,21 +121,29 @@ const featuredCollectionSchema = new mongoose.Schema({
   },
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "AuraUser" },
 });
-const FeaturedCollection = mongoose.model(
-  "FeaturedCollection",
-  featuredCollectionSchema,
-);
+const FeaturedCollection = mongoose.models.FeaturedCollection || mongoose.model("FeaturedCollection", featuredCollectionSchema);
 
 import { auth } from "./middleware/auth.js";
 import userRoutes from "./routes/user.js";
 import uploadRoutes from "./routes/upload.js";
 import orderRoutes from "./routes/order.js";
+import productRoutes from "./routes/product.js";
+import testimonialRoutes from "./routes/testimonial.js";
+import featuredCollectionRoutes from "./routes/featuredCollection.js";
+import authRoutes from "./routes/auth.js";
+import { globalErrorHandler } from "./middleware/errorHandler.js";
 
 
 // Routes
 app.use("/api", userRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api", orderRoutes);
+
+// Modular resource routes
+app.use("/api/products", productRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/featured-collections", featuredCollectionRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/api/products", async (req, res) => {
   const { limit } = req.query;
@@ -989,5 +998,10 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+app.use(globalErrorHandler);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+
+
